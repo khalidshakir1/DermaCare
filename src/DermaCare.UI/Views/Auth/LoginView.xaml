@@ -1,0 +1,129 @@
+﻿<UserControl x:Class="DermaCare.UI.Views.Auth.LoginView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+    <Grid Background="{DynamicResource MaterialDesignPaper}">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <materialDesign:Card Width="420"
+                                 Padding="32"
+                                 Margin="16"
+                                 UniformCornerRadius="12"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center">
+                <StackPanel>
+                    <TextBlock Text="DermaCare Clinic"
+                               Style="{StaticResource MaterialDesignHeadline5TextBlock}"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,4" />
+
+                    <!-- Sign In Mode -->
+                    <StackPanel Visibility="{Binding IsLoginMode, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="Sign in to continue"
+                                   Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                   HorizontalAlignment="Center"
+                                   Opacity="0.7"
+                                   Margin="0,0,0,24" />
+
+                        <TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Username"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Margin="0,0,0,16" />
+
+                        <PasswordBox x:Name="PasswordInput"
+                                     PasswordChanged="PasswordInput_OnPasswordChanged"
+                                     materialDesign:HintAssist.Hint="Password"
+                                     Style="{StaticResource MaterialDesignOutlinedPasswordBox}"
+                                     Margin="0,0,0,16" />
+
+                        <TextBlock Text="{Binding SuccessMessage}"
+                                   Foreground="#2E7D32"
+                                   Visibility="{Binding HasSuccess, Converter={StaticResource BoolToVis}}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,0,0,12" />
+
+                        <TextBlock Text="{Binding ErrorMessage}"
+                                   Foreground="{DynamicResource MaterialDesignValidationErrorBrush}"
+                                   Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,0,0,12" />
+
+                        <Button Content="Sign In"
+                                Command="{Binding LoginCommand}"
+                                IsDefault="True"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Height="42"
+                                Margin="0,4,0,12" />
+
+                        <Button Content="New Doctor? Register Here"
+                                Command="{Binding ToggleModeCommand}"
+                                Style="{StaticResource MaterialDesignFlatButton}"
+                                HorizontalAlignment="Center" />
+                    </StackPanel>
+
+                    <!-- Doctor Registration Mode -->
+                    <StackPanel Visibility="{Binding IsRegisterMode, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="Doctor Registration (Requires Admin Approval)"
+                                   Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                   HorizontalAlignment="Center"
+                                   Opacity="0.7"
+                                   Margin="0,0,0,20" />
+
+                        <TextBox Text="{Binding FullName, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Full Name (e.g. Dr. Ayesha Khan) *"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Margin="0,0,0,12" />
+
+                        <TextBox Text="{Binding PMDCNumber, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="PMDC Registration Number *"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Margin="0,0,0,12" />
+
+                        <TextBox Text="{Binding Specialization, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Specialization"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Margin="0,0,0,12" />
+
+                        <TextBox Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Phone (03XX-XXXXXXX) *"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Margin="0,0,0,12" />
+
+                        <TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Username *"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Margin="0,0,0,12" />
+
+                        <PasswordBox x:Name="RegPasswordInput"
+                                     PasswordChanged="PasswordInput_OnPasswordChanged"
+                                     materialDesign:HintAssist.Hint="Password (min 6 chars) *"
+                                     Style="{StaticResource MaterialDesignOutlinedPasswordBox}"
+                                     Margin="0,0,0,12" />
+
+                        <PasswordBox x:Name="ConfirmPasswordInput"
+                                     PasswordChanged="ConfirmPasswordInput_OnPasswordChanged"
+                                     materialDesign:HintAssist.Hint="Confirm Password *"
+                                     Style="{StaticResource MaterialDesignOutlinedPasswordBox}"
+                                     Margin="0,0,0,12" />
+
+                        <TextBlock Text="{Binding ErrorMessage}"
+                                   Foreground="{DynamicResource MaterialDesignValidationErrorBrush}"
+                                   Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,0,0,12" />
+
+                        <Button Content="Submit Registration"
+                                Command="{Binding RegisterDoctorCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Height="42"
+                                Margin="0,4,0,10" />
+
+                        <Button Content="Back to Sign In"
+                                Command="{Binding ToggleModeCommand}"
+                                Style="{StaticResource MaterialDesignFlatButton}"
+                                HorizontalAlignment="Center" />
+                    </StackPanel>
+                </StackPanel>
+            </materialDesign:Card>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

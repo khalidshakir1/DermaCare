@@ -1,0 +1,72 @@
+<UserControl x:Class="DermaCare.UI.Views.Appointments.AppointmentFormView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+    <materialDesign:Card Margin="24" Padding="24" MaxWidth="620" UniformCornerRadius="8" VerticalAlignment="Top">
+        <StackPanel>
+            <TextBlock Text="Book Appointment"
+                       Style="{StaticResource MaterialDesignHeadline5TextBlock}"
+                       Margin="0,0,0,20" />
+
+            <ComboBox ItemsSource="{Binding Patients}"
+                      SelectedItem="{Binding SelectedPatient}"
+                      DisplayMemberPath="FullName"
+                      materialDesign:HintAssist.Hint="Patient *"
+                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                      Margin="0,0,0,14" />
+
+            <ComboBox ItemsSource="{Binding Doctors}"
+                      SelectedItem="{Binding SelectedDoctor}"
+                      DisplayMemberPath="User.FullName"
+                      materialDesign:HintAssist.Hint="Doctor *"
+                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                      Margin="0,0,0,14" />
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <DatePicker Grid.Column="0"
+                            SelectedDate="{Binding AppointmentDate}"
+                            materialDesign:HintAssist.Hint="Date *"
+                            Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                            Margin="0,0,0,14" />
+
+                <TextBox Grid.Column="2"
+                         Text="{Binding AppointmentTime, UpdateSourceTrigger=PropertyChanged}"
+                         materialDesign:HintAssist.Hint="Time (HH:mm) *"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                         Margin="0,0,0,14" />
+            </Grid>
+
+            <ComboBox ItemsSource="{Binding AppointmentTypes}"
+                      SelectedItem="{Binding Type}"
+                      materialDesign:HintAssist.Hint="Appointment Type"
+                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                      Margin="0,0,0,14" />
+
+            <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}"
+                     materialDesign:HintAssist.Hint="Notes"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                     Margin="0,0,0,14" />
+
+            <TextBlock Text="{Binding ErrorMessage}"
+                       Foreground="{DynamicResource MaterialDesignValidationErrorBrush}"
+                       Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}"
+                       Margin="0,0,0,12" />
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Cancel"
+                        Command="{Binding CancelCommand}"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        Margin="0,0,8,0" />
+                <Button Content="Confirm Booking"
+                        Command="{Binding SaveCommand}"
+                        Style="{StaticResource MaterialDesignRaisedButton}" />
+            </StackPanel>
+        </StackPanel>
+    </materialDesign:Card>
+</UserControl>

@@ -1,0 +1,81 @@
+<UserControl x:Class="DermaCare.UI.Views.MedicalRecords.ConsultationView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="20" MaxWidth="920">
+            <DockPanel Margin="0,0,0,16">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button Content="Print Prescription" Command="{Binding PrintPrescriptionCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,0" />
+                    <Button Content="Export Prescription PDF" Command="{Binding ExportPdfCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,0" />
+                    <Button Content="Save Consultation" Command="{Binding SaveCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0" />
+                    <Button Content="Back" Command="{Binding BackCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" />
+                </StackPanel>
+                <TextBlock Text="{Binding HeaderTitle}" Style="{StaticResource MaterialDesignHeadline5TextBlock}" VerticalAlignment="Center" />
+            </DockPanel>
+
+            <materialDesign:Card Padding="20" Margin="0,0,0,16" UniformCornerRadius="8">
+                <StackPanel>
+                    <TextBox Text="{Binding ChiefComplaint, UpdateSourceTrigger=PropertyChanged}"
+                             materialDesign:HintAssist.Hint="Chief Complaint *"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             Margin="0,0,0,12" />
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding Diagnosis, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Diagnosis *"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" />
+                        <ComboBox Grid.Column="2"
+                                  IsEditable="True"
+                                  ItemsSource="{Binding CommonIcd10Codes}"
+                                  Text="{Binding Icd10Code, UpdateSourceTrigger=PropertyChanged}"
+                                  materialDesign:HintAssist.Hint="ICD-10 Code"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}" />
+                    </Grid>
+                    <TextBox Text="{Binding TreatmentPlan, UpdateSourceTrigger=PropertyChanged}"
+                             materialDesign:HintAssist.Hint="Treatment Plan"
+                             AcceptsReturn="True"
+                             Height="72"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             Margin="0,0,0,12" />
+                    <TextBox Text="{Binding ProcedureNotes, UpdateSourceTrigger=PropertyChanged}"
+                             materialDesign:HintAssist.Hint="Procedure Notes (Peel / Laser / Biopsy)"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}" />
+                </StackPanel>
+            </materialDesign:Card>
+
+            <materialDesign:Card Padding="20" Margin="0,0,0,16" UniformCornerRadius="8">
+                <StackPanel>
+                    <DockPanel Margin="0,0,0,10">
+                        <Button DockPanel.Dock="Right" Content="Attach Photo" Command="{Binding AttachPhotoCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" />
+                        <TextBlock Text="Prescriptions" Style="{StaticResource MaterialDesignSubtitle1TextBlock}" VerticalAlignment="Center" />
+                    </DockPanel>
+                    <WrapPanel Margin="0,0,0,10">
+                        <TextBox Width="170" Text="{Binding DrugName, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Drug Name" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,8,4" />
+                        <TextBox Width="100" Text="{Binding Dose, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Dose" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,8,4" />
+                        <TextBox Width="120" Text="{Binding Frequency, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Frequency" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,8,4" />
+                        <TextBox Width="100" Text="{Binding Duration, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Duration" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,8,4" />
+                        <TextBox Width="180" Text="{Binding Instructions, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Instructions" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,8,4" />
+                        <Button Content="Add Rx" Command="{Binding AddPrescriptionCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" />
+                    </WrapPanel>
+                    <DataGrid ItemsSource="{Binding Prescriptions}" AutoGenerateColumns="False" IsReadOnly="True" Height="150">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Drug" Binding="{Binding DrugName}" Width="180" />
+                            <DataGridTextColumn Header="Dose" Binding="{Binding Dose}" Width="100" />
+                            <DataGridTextColumn Header="Frequency" Binding="{Binding Frequency}" Width="130" />
+                            <DataGridTextColumn Header="Duration" Binding="{Binding Duration}" Width="100" />
+                            <DataGridTextColumn Header="Instructions" Binding="{Binding Instructions}" Width="*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </materialDesign:Card>
+
+            <TextBlock Text="{Binding StatusMessage}" FontWeight="SemiBold" Margin="4,0" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

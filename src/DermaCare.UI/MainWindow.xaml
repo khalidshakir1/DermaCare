@@ -1,0 +1,121 @@
+﻿<Window x:Class="DermaCare.UI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="DermaCare Clinic Management"
+        Height="760" Width="1200"
+        WindowStartupLocation="CenterScreen">
+    <Window.InputBindings>
+        <KeyBinding Key="F2" Command="{Binding QuickNewPatientCommand}" />
+        <KeyBinding Key="F3" Command="{Binding QuickBookAppointmentCommand}" />
+    </Window.InputBindings>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Sidebar Navigation (hidden until authenticated) -->
+        <Border Grid.Column="0"
+                Width="230"
+                Visibility="{Binding IsAuthenticated, Converter={StaticResource BoolToVis}}"
+                Background="{DynamicResource MaterialDesignPaper}"
+                BorderBrush="{DynamicResource MaterialDesignDivider}"
+                BorderThickness="0,0,1,0">
+            <DockPanel Margin="12,20">
+                <StackPanel DockPanel.Dock="Top">
+                    <TextBlock Text="DermaCare"
+                               Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                               Margin="8,0,8,4" />
+                    <TextBlock Text="{Binding CurrentUserDisplay}"
+                               Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                               Opacity="0.7"
+                               Margin="8,0,8,20" />
+
+                    <Button Content="Dashboard"
+                            Command="{Binding NavigateDashboardCommand}"
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            HorizontalContentAlignment="Left"
+                            Margin="0,2" />
+
+                    <Button Content="Patients (F2 New)"
+                            Command="{Binding NavigatePatientsCommand}"
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            HorizontalContentAlignment="Left"
+                            Margin="0,2" />
+
+                    <Button Content="Doctors"
+                            Command="{Binding NavigateDoctorsCommand}"
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            HorizontalContentAlignment="Left"
+                            Margin="0,2" />
+
+                    <Button Content="Appointments (F3 Book)"
+                            Command="{Binding NavigateAppointmentsCommand}"
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            HorizontalContentAlignment="Left"
+                            Margin="0,2" />
+
+                    <Button Content="Billing"
+                            Command="{Binding NavigateBillingCommand}"
+                            Visibility="{Binding CanAccessBilling, Converter={StaticResource BoolToVis}}"
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            HorizontalContentAlignment="Left"
+                            Margin="0,2" />
+
+                    <Button Content="Inventory"
+                            Command="{Binding NavigateInventoryCommand}"
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            HorizontalContentAlignment="Left"
+                            Margin="0,2" />
+
+                    <Button Content="Reports"
+                            Command="{Binding NavigateReportsCommand}"
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            HorizontalContentAlignment="Left"
+                            Margin="0,2" />
+
+                    <Button Content="Settings &amp; Users"
+                            Command="{Binding NavigateSettingsCommand}"
+                            Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}"
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            HorizontalContentAlignment="Left"
+                            Margin="0,2" />
+                </StackPanel>
+
+                <StackPanel DockPanel.Dock="Bottom" VerticalAlignment="Bottom">
+                    <Button Content="Toggle Light / Dark"
+                            Command="{Binding ToggleThemeCommand}"
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            Margin="0,0,0,8" />
+                    <Button Content="Sign Out"
+                            Command="{Binding LogoutCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Main Content Area -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <materialDesign:ColorZone Grid.Row="0"
+                                      Height="56"
+                                      Mode="PrimaryMid"
+                                      Padding="16,0"
+                                      Visibility="{Binding IsAuthenticated, Converter={StaticResource BoolToVis}}"
+                                      VerticalAlignment="Stretch">
+                <TextBlock Text="{Binding PageTitle}"
+                           VerticalAlignment="Center"
+                           Style="{StaticResource MaterialDesignHeadline6TextBlock}" />
+            </materialDesign:ColorZone>
+
+            <ContentControl Grid.Row="1" Content="{Binding CurrentView}" />
+        </Grid>
+    </Grid>
+</Window>
+

@@ -1,0 +1,80 @@
+﻿<Application x:Class="DermaCare.UI.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:vm="clr-namespace:DermaCare.UI.ViewModels"
+             xmlns:apptVm="clr-namespace:DermaCare.UI.ViewModels.Appointments"
+             xmlns:authVm="clr-namespace:DermaCare.UI.ViewModels.Auth"
+             xmlns:billVm="clr-namespace:DermaCare.UI.ViewModels.Billing"
+             xmlns:doctorVm="clr-namespace:DermaCare.UI.ViewModels.Doctors"
+             xmlns:emrVm="clr-namespace:DermaCare.UI.ViewModels.MedicalRecords"
+             xmlns:patientVm="clr-namespace:DermaCare.UI.ViewModels.Patients"
+             xmlns:repVm="clr-namespace:DermaCare.UI.ViewModels.Reports"
+             xmlns:setVm="clr-namespace:DermaCare.UI.ViewModels.Settings"
+             xmlns:views="clr-namespace:DermaCare.UI.Views"
+             xmlns:apptViews="clr-namespace:DermaCare.UI.Views.Appointments"
+             xmlns:authViews="clr-namespace:DermaCare.UI.Views.Auth"
+             xmlns:billViews="clr-namespace:DermaCare.UI.Views.Billing"
+             xmlns:doctorViews="clr-namespace:DermaCare.UI.Views.Doctors"
+             xmlns:emrViews="clr-namespace:DermaCare.UI.Views.MedicalRecords"
+             xmlns:patientViews="clr-namespace:DermaCare.UI.Views.Patients"
+             xmlns:repViews="clr-namespace:DermaCare.UI.Views.Reports"
+             xmlns:setViews="clr-namespace:DermaCare.UI.Views.Settings"
+             xmlns:invVm="clr-namespace:DermaCare.UI.ViewModels.Inventory"
+             xmlns:invViews="clr-namespace:DermaCare.UI.Views.Inventory">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="Teal" SecondaryColor="Cyan" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <BooleanToVisibilityConverter x:Key="BoolToVis" />
+
+            <DataTemplate DataType="{x:Type authVm:LoginViewModel}">
+                <authViews:LoginView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
+                <views:DashboardView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type patientVm:PatientListViewModel}">
+                <patientViews:PatientListView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type patientVm:PatientFormViewModel}">
+                <patientViews:PatientFormView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type patientVm:PatientProfileViewModel}">
+                <patientViews:PatientProfileView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type doctorVm:DoctorListViewModel}">
+                <doctorViews:DoctorListView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type doctorVm:DoctorFormViewModel}">
+                <doctorViews:DoctorFormView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type apptVm:AppointmentCalendarViewModel}">
+                <apptViews:AppointmentCalendarView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type apptVm:AppointmentFormViewModel}">
+                <apptViews:AppointmentFormView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type emrVm:ConsultationViewModel}">
+                <emrViews:ConsultationView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type billVm:InvoiceViewModel}">
+                <billViews:InvoiceView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type repVm:ReportsViewModel}">
+                <repViews:ReportsView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type setVm:SettingsViewModel}">
+                <setViews:SettingsView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type invVm:InventoryViewModel}">
+                <invViews:InventoryView />
+            </DataTemplate>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
+
+
