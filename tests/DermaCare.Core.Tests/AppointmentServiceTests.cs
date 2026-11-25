@@ -45,6 +45,8 @@ public class AppointmentServiceTests
             .ReturnsAsync(new Doctor { DoctorId = 1 });
         apptRepo.Setup(r => r.HasConflictAsync(1, It.IsAny<DateTime>(), It.IsAny<TimeSpan>(), null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
+        apptRepo.Setup(r => r.GetNextTokenSequenceAsync(It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(4);
 
         var sut = new AppointmentService(apptRepo.Object, docRepo.Object, docService.Object, session);
         var result = await sut.BookAsync(new Appointment
@@ -57,6 +59,8 @@ public class AppointmentServiceTests
 
         Assert.True(result.Success);
         Assert.Equal(AppointmentStatus.Scheduled, result.Data?.Status);
+        Assert.Equal("T-004", result.Data?.TokenNumber);
+        Assert.Equal(4, result.Data?.TokenSequence);
         apptRepo.Verify(r => r.AddAsync(It.IsAny<Appointment>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

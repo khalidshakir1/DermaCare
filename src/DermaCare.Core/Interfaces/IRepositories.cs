@@ -34,6 +34,8 @@ public interface IAppointmentRepository
 {
     Task<Appointment?> GetByIdAsync(int appointmentId, CancellationToken ct = default);
     Task<IReadOnlyList<Appointment>> GetByDateAsync(DateTime date, int? doctorId = null, CancellationToken ct = default);
+    Task<IReadOnlyList<Appointment>> GetTokenHistoryAsync(DateTime? from = null, DateTime? to = null, CancellationToken ct = default);
+    Task<int> GetNextTokenSequenceAsync(DateTime date, CancellationToken ct = default);
     Task<bool> HasConflictAsync(int doctorId, DateTime date, TimeSpan time, int? excludeAppointmentId = null, CancellationToken ct = default);
     Task AddAsync(Appointment appointment, CancellationToken ct = default);
     Task UpdateAsync(Appointment appointment, CancellationToken ct = default);
@@ -55,6 +57,9 @@ public interface IBillingRepository
     Task<IReadOnlyList<ServiceItem>> GetActiveServicesAsync(CancellationToken ct = default);
     Task<string> GenerateNextBillNumberAsync(CancellationToken ct = default);
     Task<decimal> GetTodaysRevenueAsync(CancellationToken ct = default);
+    Task<decimal> GetTodaysRevenueByUserAsync(int userId, CancellationToken ct = default);
+    Task<int> GetTodaysBillCountAsync(int? userId = null, CancellationToken ct = default);
+    Task<decimal> GetTodaysDiscountsAsync(CancellationToken ct = default);
     Task<ClinicProfile> GetClinicProfileAsync(CancellationToken ct = default);
     Task AddInvoiceAsync(Invoice invoice, CancellationToken ct = default);
     Task UpdateInvoiceAsync(Invoice invoice, CancellationToken ct = default);

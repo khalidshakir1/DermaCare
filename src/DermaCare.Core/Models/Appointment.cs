@@ -9,6 +9,8 @@ public class Appointment
     public TimeSpan AppointmentTime { get; set; }
     public AppointmentType Type { get; set; } = AppointmentType.Consultation;
     public AppointmentStatus Status { get; set; } = AppointmentStatus.Scheduled;
+    public string TokenNumber { get; set; } = string.Empty;
+    public int TokenSequence { get; set; }
     public string? Notes { get; set; }
     public int CreatedBy { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

@@ -4,6 +4,8 @@ namespace DermaCare.Core.Interfaces;
 
 public record PaymentMethodSummary(PaymentMethod Method, decimal Amount, int Count);
 
+public record ReceptionistRevenueSummary(int UserId, string ReceptionistName, decimal TotalCollected, int BillCount, decimal TotalDiscount);
+
 public record ClinicReportSummary(
     int TotalAppointments,
     int CompletedAppointments,
@@ -12,7 +14,9 @@ public record ClinicReportSummary(
     decimal TotalCollected,
     IReadOnlyList<Appointment> Appointments,
     IReadOnlyList<Invoice> Invoices,
-    IReadOnlyList<PaymentMethodSummary> RevenueByMethod);
+    IReadOnlyList<PaymentMethodSummary> RevenueByMethod,
+    decimal TotalDiscount = 0m,
+    IReadOnlyList<ReceptionistRevenueSummary>? RevenueByReceptionist = null);
 
 public interface IReportService
 {

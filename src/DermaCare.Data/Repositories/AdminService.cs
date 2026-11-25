@@ -152,6 +152,51 @@ public class AdminService : IAdminService
         return new ServiceResult<ServiceItem>(true, item);
     }
 
+    public async Task<ServiceResult<ServiceItem>> UpdateServiceAsync(ServiceItem service, CancellationToken ct = default)
+    {
+        if (service.ServiceId <= 0 || string.IsNullOrWhiteSpace(service.ServiceName) || service.DefaultPrice < 0)
+            return new ServiceResult<ServiceItem>(false, ErrorMessage: "Valid service name and price are required.");
+
+        var existing = await _context.Services.FindAsync(new object[] { service.ServiceId }, ct);
+        if (existing is null)
+            return new ServiceResult<ServiceItem>(false, ErrorMessage: "Service not found.");
+
+        existing.ServiceName = service.ServiceName.Trim();
+        existing.DefaultPrice = service.DefaultPrice;
+        existing.Category = string.IsNullOrWhiteSpace(service.Category) ? "General" : service.Category.Trim();
+        existing.IsActive = service.IsActive;
+
+        await _context.SaveChangesAsync(ct);
+        return new ServiceResult<ServiceItem>(true, existing);
+    }
+
+    public async Task ToggleServiceActiveAsync(int serviceId, CancellationToken ct = default)
+    {
+        var item = await _context.Services.FindAsync(new object[] { serviceId }, ct);
+        if (item is null) return;
+        item.IsActive = !item.IsActive;
+        await _context.SaveChangesAsync(ct);
+    }
+
+    public async Task<ServiceResult<bool>> DeleteServiceAsync(int serviceId, CancellationToken ct = default)
+    {
+        var item = await _context.Services.FindAsync(new object[] { serviceId }, ct);
+        if (item is null)
+            return new ServiceResult<bool>(false, ErrorMessage: "Service not found.");
+
+        var isUsed = await _context.InvoiceItems.AnyAsync(i => i.ServiceId == serviceId, ct);
+        if (isUsed)
+        {
+            item.IsActive = false;
+            await _context.SaveChangesAsync(ct);
+            return new ServiceResult<bool>(true, true);
+        }
+
+        _context.Services.Remove(item);
+        await _context.SaveChangesAsync(ct);
+        return new ServiceResult<bool>(true, true);
+    }
+
     public async Task<IReadOnlyList<AuditLog>> GetRecentAuditLogsAsync(int take = 100, CancellationToken ct = default) =>
         await _context.AuditLogs.OrderByDescending(a => a.Timestamp).Take(take).ToListAsync(ct);
 

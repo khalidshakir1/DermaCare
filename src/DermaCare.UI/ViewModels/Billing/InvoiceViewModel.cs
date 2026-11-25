@@ -32,6 +32,7 @@ public class InvoiceViewModel : BaseViewModel
     private string? _notes;
     private decimal _discountAmount;
     private decimal _discountPercent;
+    private string? _discountReason;
     private decimal _initialPaymentAmount;
     private PaymentMethod _initialPaymentMethod = PaymentMethod.Cash;
     private decimal _paymentAmount;
@@ -70,6 +71,23 @@ public class InvoiceViewModel : BaseViewModel
         AddMedicineCommand = new RelayCommand(AddMedicine);
         AddCustomItemCommand = new RelayCommand(AddCustomItem);
         RemoveLineItemCommand = new RelayCommand(RemoveLineItem);
+        ApplyFullDiscountCommand = new RelayCommand(() =>
+        {
+            DiscountAmount = 0m;
+            DiscountPercent = 100m;
+            if (string.IsNullOrWhiteSpace(DiscountReason))
+                DiscountReason = "Full Discount (Dr. Reference)";
+        });
+        ApplyPercentPresetCommand = new RelayCommand(p =>
+        {
+            if (decimal.TryParse(p?.ToString(), out var pct))
+            {
+                DiscountAmount = 0m;
+                DiscountPercent = pct;
+                if (string.IsNullOrWhiteSpace(DiscountReason))
+                    DiscountReason = $"{pct:N0}% Discount (Dr. Reference)";
+            }
+        });
         FillInitialFullCommand = new RelayCommand(() => InitialPaymentAmount = DraftTotal);
         CreateInvoiceCommand = new RelayCommand(async () => await CreateInvoiceAsync());
         FillBalanceCommand = new RelayCommand(() =>
@@ -145,6 +163,7 @@ public class InvoiceViewModel : BaseViewModel
                 OnPropertyChanged(nameof(DraftTotal));
         }
     }
+    public string? DiscountReason { get => _discountReason; set => SetProperty(ref _discountReason, value); }
     public decimal InitialPaymentAmount { get => _initialPaymentAmount; set => SetProperty(ref _initialPaymentAmount, value); }
     public PaymentMethod InitialPaymentMethod { get => _initialPaymentMethod; set => SetProperty(ref _initialPaymentMethod, value); }
     public decimal PaymentAmount { get => _paymentAmount; set => SetProperty(ref _paymentAmount, value); }
@@ -182,6 +201,8 @@ public class InvoiceViewModel : BaseViewModel
     public ICommand AddMedicineCommand { get; }
     public ICommand AddCustomItemCommand { get; }
     public ICommand RemoveLineItemCommand { get; }
+    public ICommand ApplyFullDiscountCommand { get; }
+    public ICommand ApplyPercentPresetCommand { get; }
     public ICommand FillInitialFullCommand { get; }
     public ICommand CreateInvoiceCommand { get; }
     public ICommand FillBalanceCommand { get; }
@@ -365,7 +386,8 @@ public class InvoiceViewModel : BaseViewModel
             InitialPaymentAmount,
             InitialPaymentMethod,
             DiscountAmount,
-            DiscountPercent);
+            DiscountPercent,
+            DiscountReason);
 
         if (!result.Success)
         {
@@ -377,6 +399,7 @@ public class InvoiceViewModel : BaseViewModel
         Notes = string.Empty;
         DiscountAmount = 0m;
         DiscountPercent = 0m;
+        DiscountReason = string.Empty;
         InitialPaymentAmount = 0m;
         OnPropertyChanged(nameof(DraftSubtotal));
         OnPropertyChanged(nameof(DraftTotal));

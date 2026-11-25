@@ -58,9 +58,10 @@ public class AuthService : IAuthService
         if (existing is not null)
             return new AuthResult(false, "Username is already taken.");
 
-        var doctorRole = await _userRepository.GetRoleByNameAsync("Doctor", ct);
+        var doctorRole = await _userRepository.GetRoleByNameAsync("Doctor", ct)
+                         ?? await _userRepository.GetRoleByNameAsync("Admin", ct);
         if (doctorRole is null)
-            return new AuthResult(false, "Doctor role is not configured in the system.");
+            return new AuthResult(false, "Admin / Doctor role is not configured in the system.");
 
         var user = new User
         {

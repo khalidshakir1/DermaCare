@@ -31,6 +31,15 @@ public class BillingService : IBillingService
     public Task<decimal> GetTodaysRevenueAsync(CancellationToken ct = default) =>
         _billingRepository.GetTodaysRevenueAsync(ct);
 
+    public Task<decimal> GetTodaysRevenueByUserAsync(int userId, CancellationToken ct = default) =>
+        _billingRepository.GetTodaysRevenueByUserAsync(userId, ct);
+
+    public Task<int> GetTodaysBillCountAsync(int? userId = null, CancellationToken ct = default) =>
+        _billingRepository.GetTodaysBillCountAsync(userId, ct);
+
+    public Task<decimal> GetTodaysDiscountsAsync(CancellationToken ct = default) =>
+        _billingRepository.GetTodaysDiscountsAsync(ct);
+
     public Task<ClinicProfile> GetClinicProfileAsync(CancellationToken ct = default) =>
         _billingRepository.GetClinicProfileAsync(ct);
 
@@ -43,6 +52,7 @@ public class BillingService : IBillingService
         PaymentMethod initialPaymentMethod = PaymentMethod.Cash,
         decimal discountAmount = 0m,
         decimal discountPercent = 0m,
+        string? discountReason = null,
         CancellationToken ct = default)
     {
         if (patientId <= 0)
@@ -95,10 +105,12 @@ public class BillingService : IBillingService
             Subtotal = subtotal,
             DiscountAmount = computedDiscount,
             DiscountPercent = discountPercent,
+            DiscountReason = string.IsNullOrWhiteSpace(discountReason) ? null : discountReason.Trim(),
             TotalAmount = total,
             PaidAmount = 0m,
             Status = InvoiceStatus.Issued,
             IssuedAt = DateTime.UtcNow,
+            CollectedByUserId = _session.CurrentUser?.UserId ?? 0,
             Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim(),
             Items = itemList
         };

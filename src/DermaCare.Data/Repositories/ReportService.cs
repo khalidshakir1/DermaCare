@@ -50,6 +50,28 @@ public class ReportService : IReportService
         var newPatients = await _context.Patients
             .CountAsync(p => p.CreatedAt >= utcStart && p.CreatedAt < utcEnd, ct);
 
+        var users = await _context.Users
+            .ToDictionaryAsync(u => u.UserId, u => u.FullName, ct);
+
+        var discountsByUser = invoices
+            .GroupBy(i => i.CollectedByUserId)
+            .ToDictionary(g => g.Key, g => g.Sum(i => i.DiscountAmount));
+
+        var billCountsByUser = invoices
+            .GroupBy(i => i.CollectedByUserId)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        var revenueByReceptionist = payments
+            .GroupBy(p => p.ReceivedBy)
+            .Select(g => new ReceptionistRevenueSummary(
+                UserId: g.Key,
+                ReceptionistName: g.Key > 0 && users.TryGetValue(g.Key, out var name) ? name : "System / Walk-in",
+                TotalCollected: g.Sum(p => p.Amount),
+                BillCount: billCountsByUser.TryGetValue(g.Key, out var cnt) ? cnt : g.Select(p => p.InvoiceId).Distinct().Count(),
+                TotalDiscount: discountsByUser.TryGetValue(g.Key, out var disc) ? disc : 0m))
+            .OrderByDescending(r => r.TotalCollected)
+            .ToList();
+
         return new ClinicReportSummary(
             TotalAppointments: appointments.Count,
             CompletedAppointments: appointments.Count(a => a.Status == AppointmentStatus.Completed),
@@ -58,6 +80,8 @@ public class ReportService : IReportService
             TotalCollected: payments.Sum(p => p.Amount),
             Appointments: appointments,
             Invoices: invoices,
-            RevenueByMethod: revenueByMethod);
+            RevenueByMethod: revenueByMethod,
+            TotalDiscount: invoices.Sum(i => i.DiscountAmount),
+            RevenueByReceptionist: revenueByReceptionist);
     }
 }

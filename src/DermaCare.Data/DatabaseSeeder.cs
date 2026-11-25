@@ -22,14 +22,26 @@ public static class DatabaseSeeder
         if (!await context.Users.AnyAsync(ct))
         {
             var adminRole = await context.Roles.FirstAsync(r => r.RoleName == "Admin", ct);
+            var recepRole = await context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Receptionist", ct);
             context.Users.Add(new User
             {
                 Username = "admin",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
                 RoleId = adminRole.RoleId,
-                FullName = "Clinic Administrator",
+                FullName = "Doctor / Clinic Administrator",
                 IsActive = true
             });
+            if (recepRole is not null)
+            {
+                context.Users.Add(new User
+                {
+                    Username = "receptionist",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Recep@123"),
+                    RoleId = recepRole.RoleId,
+                    FullName = "Front Desk Receptionist",
+                    IsActive = true
+                });
+            }
             await context.SaveChangesAsync(ct);
         }
 

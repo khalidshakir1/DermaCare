@@ -72,6 +72,12 @@ public class MainViewModel : BaseViewModel
             _navigationService.NavigateTo<ReportsViewModel>();
         });
 
+        NavigateSaleSummaryCommand = new RelayCommand(() =>
+        {
+            PageTitle = "Sale Summary";
+            _navigationService.NavigateTo<SaleSummaryViewModel>();
+        });
+
         NavigateSettingsCommand = new RelayCommand(() =>
         {
             PageTitle = "Settings & Administration";
@@ -109,16 +115,26 @@ public class MainViewModel : BaseViewModel
     public bool IsAuthenticated => _session.IsAuthenticated;
     public bool IsAdmin => _session.IsAdmin;
     public bool IsDoctor => _session.IsDoctor;
+    public bool IsReceptionist => _session.IsReceptionist;
+    public bool CanAccessDoctors => _session.IsAdmin;
+    public bool CanAccessReports => _session.IsAdmin;
+    public bool CanAccessSaleSummary => _session.IsAdmin;
+    public bool CanAccessSettings => _session.IsAdmin;
     public bool CanAccessBilling => _session.IsAuthenticated;
+    public bool CanAccessInventory => _session.IsAuthenticated;
+    public string RoleBadgeText => _session.IsAdmin ? "ADMIN / DR" : "RECEPTIONIST";
+    public string RoleBadgeColor => _session.IsAdmin ? "#1565C0" : "#2E7D32";
+    public SnackbarMessageQueue ToastQueue { get; } = new(TimeSpan.FromSeconds(3));
     public string CurrentUserDisplay => _session.CurrentUser is null
         ? string.Empty
-        : $"{_session.CurrentUser.FullName} ({_session.RoleName})";
+        : _session.CurrentUser.FullName;
 
     public ICommand NavigateDashboardCommand { get; }
     public ICommand NavigatePatientsCommand { get; }
     public ICommand NavigateDoctorsCommand { get; }
     public ICommand NavigateAppointmentsCommand { get; }
     public ICommand NavigateBillingCommand { get; }
+    public ICommand NavigateSaleSummaryCommand { get; }
     public ICommand NavigateReportsCommand { get; }
     public ICommand NavigateInventoryCommand { get; }
     public ICommand NavigateSettingsCommand { get; }
@@ -132,11 +148,22 @@ public class MainViewModel : BaseViewModel
         OnPropertyChanged(nameof(IsAuthenticated));
         OnPropertyChanged(nameof(IsAdmin));
         OnPropertyChanged(nameof(IsDoctor));
+        OnPropertyChanged(nameof(IsReceptionist));
+        OnPropertyChanged(nameof(CanAccessDoctors));
+        OnPropertyChanged(nameof(CanAccessReports));
+        OnPropertyChanged(nameof(CanAccessSaleSummary));
+        OnPropertyChanged(nameof(CanAccessSettings));
         OnPropertyChanged(nameof(CanAccessBilling));
+        OnPropertyChanged(nameof(CanAccessInventory));
+        OnPropertyChanged(nameof(RoleBadgeText));
+        OnPropertyChanged(nameof(RoleBadgeColor));
         OnPropertyChanged(nameof(CurrentUserDisplay));
 
         if (_session.IsAuthenticated)
+        {
             PageTitle = "Dashboard";
+            ToastQueue.Enqueue($"Welcome back, {_session.CurrentUser?.FullName}!");
+        }
     }
 
     private void ToggleTheme()

@@ -53,6 +53,35 @@ public class BillingRepository : IBillingRepository
             .SumAsync(p => (decimal?)p.Amount, ct) ?? 0m;
     }
 
+    public async Task<decimal> GetTodaysRevenueByUserAsync(int userId, CancellationToken ct = default)
+    {
+        var todayUtcStart = DateTime.Today.ToUniversalTime();
+        var todayUtcEnd = DateTime.Today.AddDays(1).ToUniversalTime();
+        return await _context.Payments
+            .Where(p => p.PaidAt >= todayUtcStart && p.PaidAt < todayUtcEnd && p.ReceivedBy == userId)
+            .SumAsync(p => (decimal?)p.Amount, ct) ?? 0m;
+    }
+
+    public async Task<int> GetTodaysBillCountAsync(int? userId = null, CancellationToken ct = default)
+    {
+        var todayUtcStart = DateTime.Today.ToUniversalTime();
+        var todayUtcEnd = DateTime.Today.AddDays(1).ToUniversalTime();
+        var q = _context.Invoices
+            .Where(i => i.IssuedAt >= todayUtcStart && i.IssuedAt < todayUtcEnd && i.Status != InvoiceStatus.Void);
+        if (userId.HasValue)
+            q = q.Where(i => i.CollectedByUserId == userId.Value);
+        return await q.CountAsync(ct);
+    }
+
+    public async Task<decimal> GetTodaysDiscountsAsync(CancellationToken ct = default)
+    {
+        var todayUtcStart = DateTime.Today.ToUniversalTime();
+        var todayUtcEnd = DateTime.Today.AddDays(1).ToUniversalTime();
+        return await _context.Invoices
+            .Where(i => i.IssuedAt >= todayUtcStart && i.IssuedAt < todayUtcEnd && i.Status != InvoiceStatus.Void)
+            .SumAsync(i => (decimal?)i.DiscountAmount, ct) ?? 0m;
+    }
+
     public async Task<ClinicProfile> GetClinicProfileAsync(CancellationToken ct = default) =>
         await _context.ClinicProfiles.FirstOrDefaultAsync(ct) ?? new ClinicProfile();
 

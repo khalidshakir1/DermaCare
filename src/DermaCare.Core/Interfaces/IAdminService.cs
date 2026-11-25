@@ -15,6 +15,9 @@ public interface IAdminService
     Task<ServiceResult<bool>> RejectDoctorAsync(int userId, int adminUserId, CancellationToken ct = default);
     Task<IReadOnlyList<ServiceItem>> GetAllServicesAsync(CancellationToken ct = default);
     Task<ServiceResult<ServiceItem>> AddServiceAsync(string name, decimal price, string category, CancellationToken ct = default);
+    Task<ServiceResult<ServiceItem>> UpdateServiceAsync(ServiceItem service, CancellationToken ct = default);
+    Task ToggleServiceActiveAsync(int serviceId, CancellationToken ct = default);
+    Task<ServiceResult<bool>> DeleteServiceAsync(int serviceId, CancellationToken ct = default);
     Task<IReadOnlyList<AuditLog>> GetRecentAuditLogsAsync(int take = 100, CancellationToken ct = default);
     Task<ServiceResult<string>> BackupDatabaseAsync(string destinationFolder, CancellationToken ct = default);
 }

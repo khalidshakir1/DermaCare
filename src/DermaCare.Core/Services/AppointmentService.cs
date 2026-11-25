@@ -25,6 +25,9 @@ public class AppointmentService : IAppointmentService
     public Task<IReadOnlyList<Appointment>> GetByDateAsync(DateTime date, int? doctorId = null, CancellationToken ct = default) =>
         _appointmentRepository.GetByDateAsync(date, doctorId, ct);
 
+    public Task<IReadOnlyList<Appointment>> GetTokenHistoryAsync(DateTime? from = null, DateTime? to = null, CancellationToken ct = default) =>
+        _appointmentRepository.GetTokenHistoryAsync(from, to, ct);
+
     public async Task<ServiceResult<Appointment>> BookAsync(Appointment appointment, CancellationToken ct = default)
     {
         if (appointment.PatientId <= 0)
@@ -52,7 +55,12 @@ public class AppointmentService : IAppointmentService
         if (hasConflict)
             return new ServiceResult<Appointment>(false, ErrorMessage: "This doctor already has an appointment at that date and time.");
 
+        var nextSeq = await _appointmentRepository.GetNextTokenSequenceAsync(appointment.AppointmentDate, ct);
+        if (nextSeq <= 0) nextSeq = 1;
+
         appointment.Status = AppointmentStatus.Scheduled;
+        appointment.TokenSequence = nextSeq;
+        appointment.TokenNumber = $"T-{nextSeq:D3}";
         appointment.CreatedBy = _session.CurrentUser?.UserId ?? 0;
         appointment.CreatedAt = DateTime.UtcNow;
 

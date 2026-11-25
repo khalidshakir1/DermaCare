@@ -101,6 +101,7 @@ public partial class App : Application
 
         // Session & Services
         services.AddSingleton<ICurrentSession, CurrentSession>();
+        services.AddSingleton<ILicenseService, StubLicenseService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IPatientService, PatientService>();
         services.AddScoped<IDoctorService, DoctorService>();
@@ -128,6 +129,7 @@ public partial class App : Application
         services.AddTransient<ConsultationViewModel>();
         services.AddTransient<InvoiceViewModel>();
         services.AddTransient<ReportsViewModel>();
+        services.AddTransient<SaleSummaryViewModel>();
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<InventoryViewModel>();
 

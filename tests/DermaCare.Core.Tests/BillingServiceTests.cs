@@ -85,12 +85,17 @@ public class BillingServiceTests
         };
 
         // 10% of 2000 = 200, plus 300 fixed = 500 discount -> 1500 net
-        var result = await sut.CreateInvoiceAsync(1, null, items, discountAmount: 300m, discountPercent: 10m);
+        var session = new CurrentSession();
+        session.SetUser(new User { UserId = 7, Username = "recep1", Role = new Role { RoleName = "Receptionist" } });
+        sut = new BillingService(repo.Object, session);
+        var result = await sut.CreateInvoiceAsync(1, null, items, discountAmount: 300m, discountPercent: 10m, discountReason: "Dr. Reference");
 
         Assert.True(result.Success);
         Assert.Equal(2000m, result.Data?.Subtotal);
         Assert.Equal(500m, result.Data?.DiscountAmount);
         Assert.Equal(1500m, result.Data?.TotalAmount);
+        Assert.Equal("Dr. Reference", result.Data?.DiscountReason);
+        Assert.Equal(7, result.Data?.CollectedByUserId);
     }
 
     [Fact]

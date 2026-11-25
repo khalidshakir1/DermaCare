@@ -8,6 +8,9 @@ public interface IBillingService
     Task<IReadOnlyList<Invoice>> GetInvoicesByPatientAsync(int patientId, CancellationToken ct = default);
     Task<IReadOnlyList<Invoice>> GetRecentInvoicesAsync(int take = 50, CancellationToken ct = default);
     Task<decimal> GetTodaysRevenueAsync(CancellationToken ct = default);
+    Task<decimal> GetTodaysRevenueByUserAsync(int userId, CancellationToken ct = default);
+    Task<int> GetTodaysBillCountAsync(int? userId = null, CancellationToken ct = default);
+    Task<decimal> GetTodaysDiscountsAsync(CancellationToken ct = default);
     Task<ClinicProfile> GetClinicProfileAsync(CancellationToken ct = default);
     Task<ServiceResult<Invoice>> CreateInvoiceAsync(
         int patientId,
@@ -18,6 +21,7 @@ public interface IBillingService
         PaymentMethod initialPaymentMethod = PaymentMethod.Cash,
         decimal discountAmount = 0m,
         decimal discountPercent = 0m,
+        string? discountReason = null,
         CancellationToken ct = default);
     Task<ServiceResult<Invoice>> RecordPaymentAsync(int invoiceId, decimal amount, PaymentMethod method, CancellationToken ct = default);
 }

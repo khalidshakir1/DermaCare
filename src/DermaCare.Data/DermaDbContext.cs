@@ -89,6 +89,7 @@ public class DermaDbContext : DbContext
         modelBuilder.Entity<Appointment>(e =>
         {
             e.HasKey(x => x.AppointmentId);
+            e.Property(x => x.TokenNumber).HasMaxLength(20);
             e.HasOne(x => x.Patient).WithMany(p => p.Appointments).HasForeignKey(x => x.PatientId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(x => x.Doctor).WithMany(d => d.Appointments).HasForeignKey(x => x.DoctorId).OnDelete(DeleteBehavior.Restrict);
         });
@@ -124,6 +125,7 @@ public class DermaDbContext : DbContext
         {
             e.HasKey(x => x.InvoiceId);
             e.Property(x => x.BillNumber).HasMaxLength(30).IsRequired();
+            e.Property(x => x.DiscountReason).HasMaxLength(150);
             e.Property(x => x.Notes).HasMaxLength(300);
             e.Property(x => x.Subtotal).HasPrecision(18, 2);
             e.Property(x => x.DiscountAmount).HasPrecision(18, 2);
@@ -131,6 +133,7 @@ public class DermaDbContext : DbContext
             e.Property(x => x.TotalAmount).HasPrecision(18, 2);
             e.Property(x => x.PaidAmount).HasPrecision(18, 2);
             e.Ignore(x => x.BalanceDue);
+            e.Ignore(x => x.CollectedByUser);
             e.HasOne(x => x.Patient).WithMany(p => p.Invoices).HasForeignKey(x => x.PatientId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(x => x.Appointment).WithOne(a => a.Invoice).HasForeignKey<Invoice>(x => x.AppointmentId).OnDelete(DeleteBehavior.Restrict);
         });

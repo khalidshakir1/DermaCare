@@ -1,0 +1,99 @@
+<UserControl x:Class="DermaCare.UI.Views.Reports.SaleSummaryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <WrapPanel Grid.Row="0" Margin="0,0,0,10">
+            <Button Content="Today" Command="{Binding TodayCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,6" />
+            <Button Content="Yesterday" Command="{Binding YesterdayCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6" />
+            <Button Content="This Week" Command="{Binding ThisWeekCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6" />
+            <Button Content="This Month" Command="{Binding ThisMonthCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,16,6" />
+            <DatePicker Width="135" SelectedDate="{Binding FromDate}" materialDesign:HintAssist.Hint="From" Style="{StaticResource MaterialDesignOutlinedDatePicker}" Margin="0,0,8,6" />
+            <DatePicker Width="135" SelectedDate="{Binding ToDate}" materialDesign:HintAssist.Hint="To" Style="{StaticResource MaterialDesignOutlinedDatePicker}" Margin="0,0,8,6" />
+            <Button Content="Apply" Command="{Binding GenerateCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,12,6" />
+            <Button Content="Export PDF" Command="{Binding ExportPdfCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6" />
+            <Button Content="Export Excel" Command="{Binding ExportExcelCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,0,6" />
+        </WrapPanel>
+
+        <TextBlock Grid.Row="1" Text="{Binding StatusMessage}" FontWeight="SemiBold" Foreground="#00796B" Margin="0,0,0,10" />
+
+        <WrapPanel Grid.Row="2" Margin="0,0,0,14">
+            <materialDesign:Card Padding="16" Width="195" Margin="0,0,12,8" UniformCornerRadius="8">
+                <StackPanel>
+                    <TextBlock Text="Net Collected" Opacity="0.7" />
+                    <TextBlock Text="{Binding TotalCollected, StringFormat='Rs. {0:N0}'}" Foreground="#00796B" Style="{StaticResource MaterialDesignHeadline5TextBlock}" />
+                </StackPanel>
+            </materialDesign:Card>
+            <materialDesign:Card Padding="16" Width="195" Margin="0,0,12,8" UniformCornerRadius="8">
+                <StackPanel>
+                    <TextBlock Text="Total Billed" Opacity="0.7" />
+                    <TextBlock Text="{Binding TotalBilled, StringFormat='Rs. {0:N0}'}" Style="{StaticResource MaterialDesignHeadline5TextBlock}" />
+                </StackPanel>
+            </materialDesign:Card>
+            <materialDesign:Card Padding="16" Width="195" Margin="0,0,12,8" UniformCornerRadius="8">
+                <StackPanel>
+                    <TextBlock Text="Discounts Given" Opacity="0.7" />
+                    <TextBlock Text="{Binding TotalDiscount, StringFormat='Rs. {0:N0}'}" Foreground="#EF6C00" Style="{StaticResource MaterialDesignHeadline5TextBlock}" />
+                </StackPanel>
+            </materialDesign:Card>
+            <materialDesign:Card Padding="16" Width="150" Margin="0,0,12,8" UniformCornerRadius="8">
+                <StackPanel>
+                    <TextBlock Text="Bills Issued" Opacity="0.7" />
+                    <TextBlock Text="{Binding TotalBills}" Style="{StaticResource MaterialDesignHeadline5TextBlock}" />
+                </StackPanel>
+            </materialDesign:Card>
+            <materialDesign:Card Padding="16" Width="170" Margin="0,0,12,8" UniformCornerRadius="8">
+                <StackPanel>
+                    <TextBlock Text="Visits / Completed" Opacity="0.7" />
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding TotalAppointments}" Style="{StaticResource MaterialDesignHeadline5TextBlock}" />
+                        <TextBlock Text="{Binding CompletedAppointments, StringFormat=' ({0})'}" Opacity="0.7" VerticalAlignment="Bottom" Margin="4,0,0,2" />
+                    </StackPanel>
+                </StackPanel>
+            </materialDesign:Card>
+        </WrapPanel>
+
+        <TabControl Grid.Row="3">
+            <TabItem Header="By Receptionist / Staff">
+                <DataGrid ItemsSource="{Binding RevenueByReceptionist}" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,8,0,0">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Staff Name" Binding="{Binding ReceptionistName}" Width="220" />
+                        <DataGridTextColumn Header="Bills" Binding="{Binding BillCount}" Width="100" />
+                        <DataGridTextColumn Header="Discounts Given" Binding="{Binding TotalDiscount, StringFormat='Rs. {0:N0}'}" Width="150" />
+                        <DataGridTextColumn Header="Cash / Payments Collected" Binding="{Binding TotalCollected, StringFormat='Rs. {0:N2}'}" Width="*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+            <TabItem Header="By Payment Method">
+                <DataGrid ItemsSource="{Binding RevenueByMethod}" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,8,0,0">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Payment Method" Binding="{Binding Method}" Width="220" />
+                        <DataGridTextColumn Header="Transactions" Binding="{Binding Count}" Width="140" />
+                        <DataGridTextColumn Header="Collected" Binding="{Binding Amount, StringFormat='Rs. {0:N2}'}" Width="*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+            <TabItem Header="Bills Detail">
+                <DataGrid ItemsSource="{Binding Invoices}" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,8,0,0">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Bill #" Binding="{Binding BillNumber}" Width="100" />
+                        <DataGridTextColumn Header="Patient" Binding="{Binding Patient.FullName}" Width="180" />
+                        <DataGridTextColumn Header="Subtotal" Binding="{Binding Subtotal, StringFormat='Rs. {0:N0}'}" Width="100" />
+                        <DataGridTextColumn Header="Discount" Binding="{Binding DiscountAmount, StringFormat='Rs. {0:N0}'}" Width="100" />
+                        <DataGridTextColumn Header="Discount Note" Binding="{Binding DiscountReason}" Width="140" />
+                        <DataGridTextColumn Header="Net Total" Binding="{Binding TotalAmount, StringFormat='Rs. {0:N0}'}" Width="100" />
+                        <DataGridTextColumn Header="Paid" Binding="{Binding PaidAmount, StringFormat='Rs. {0:N0}'}" Width="100" />
+                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

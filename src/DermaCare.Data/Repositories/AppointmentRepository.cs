@@ -27,7 +27,42 @@ public class AppointmentRepository : IAppointmentRepository
         if (doctorId.HasValue)
             q = q.Where(a => a.DoctorId == doctorId.Value);
 
-        return await q.OrderBy(a => a.AppointmentTime).ToListAsync(ct);
+        return await q.OrderBy(a => a.TokenSequence).ThenBy(a => a.AppointmentTime).ToListAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<Appointment>> GetTokenHistoryAsync(DateTime? from = null, DateTime? to = null, CancellationToken ct = default)
+    {
+        var q = _context.Appointments
+            .Include(a => a.Patient)
+            .Include(a => a.Doctor).ThenInclude(d => d!.User)
+            .AsQueryable();
+
+        if (from.HasValue)
+        {
+            var start = from.Value.Date;
+            q = q.Where(a => a.AppointmentDate >= start);
+        }
+        if (to.HasValue)
+        {
+            var end = to.Value.Date.AddDays(1);
+            q = q.Where(a => a.AppointmentDate < end);
+        }
+
+        return await q
+            .OrderByDescending(a => a.AppointmentDate)
+            .ThenByDescending(a => a.TokenSequence)
+            .Take(500)
+            .ToListAsync(ct);
+    }
+
+    public async Task<int> GetNextTokenSequenceAsync(DateTime date, CancellationToken ct = default)
+    {
+        var day = date.Date;
+        var maxSeq = await _context.Appointments
+            .Where(a => a.AppointmentDate.Date == day)
+            .Select(a => (int?)a.TokenSequence)
+            .MaxAsync(ct) ?? 0;
+        return maxSeq + 1;
     }
 
     public Task<bool> HasConflictAsync(int doctorId, DateTime date, TimeSpan time, int? excludeAppointmentId = null, CancellationToken ct = default)

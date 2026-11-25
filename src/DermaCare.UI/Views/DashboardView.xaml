@@ -2,66 +2,160 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
-    <StackPanel Margin="24">
-        <materialDesign:Card Padding="24" UniformCornerRadius="8" Margin="0,0,0,16">
-            <StackPanel>
-                <TextBlock Text="{Binding WelcomeTitle}"
-                           Style="{StaticResource MaterialDesignHeadline5TextBlock}"
-                           Margin="0,0,0,8" />
-                <TextBlock Text="{Binding Subtitle}"
-                           Style="{StaticResource MaterialDesignBody1TextBlock}"
-                           Opacity="0.8" />
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="24">
+            <!-- Header Banner -->
+            <materialDesign:Card Padding="20" UniformCornerRadius="10" Margin="0,0,0,18">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="Sale Summary"
+                                Command="{Binding OpenSaleSummaryCommand}"
+                                Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Margin="0,0,8,0" />
+                        <Button Content="Refresh"
+                                Command="{Binding RefreshCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}" />
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="{Binding WelcomeTitle}"
+                                   Style="{StaticResource MaterialDesignHeadline5TextBlock}"
+                                   Margin="0,0,0,4" />
+                        <TextBlock Text="{Binding Subtitle}"
+                                   Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                   Opacity="0.75" />
+                    </StackPanel>
+                </DockPanel>
+            </materialDesign:Card>
+
+            <!-- ADMIN / DOCTOR KPI CARDS -->
+            <WrapPanel Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}" Margin="0,0,0,12">
+                <materialDesign:Card Padding="18" Width="210" UniformCornerRadius="10" Margin="0,0,14,14">
+                    <StackPanel>
+                        <TextBlock Text="Today's Revenue" Style="{StaticResource MaterialDesignSubtitle2TextBlock}" Opacity="0.7" />
+                        <TextBlock Text="{Binding TodaysRevenue, StringFormat='Rs. {0:N0}'}" Foreground="#00796B" Style="{StaticResource MaterialDesignHeadline4TextBlock}" Margin="0,6,0,0" />
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <materialDesign:Card Padding="18" Width="210" UniformCornerRadius="10" Margin="0,0,14,14">
+                    <StackPanel>
+                        <TextBlock Text="Discounts Given Today" Style="{StaticResource MaterialDesignSubtitle2TextBlock}" Opacity="0.7" />
+                        <TextBlock Text="{Binding TodaysDiscounts, StringFormat='Rs. {0:N0}'}" Foreground="#EF6C00" Style="{StaticResource MaterialDesignHeadline4TextBlock}" Margin="0,6,0,0" />
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <materialDesign:Card Padding="18" Width="190" UniformCornerRadius="10" Margin="0,0,14,14">
+                    <StackPanel>
+                        <TextBlock Text="Today's Tokens" Style="{StaticResource MaterialDesignSubtitle2TextBlock}" Opacity="0.7" />
+                        <TextBlock Text="{Binding TodaysAppointmentCount}" Foreground="#1565C0" Style="{StaticResource MaterialDesignHeadline4TextBlock}" Margin="0,6,0,0" />
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <materialDesign:Card Padding="18" Width="180" UniformCornerRadius="10" Margin="0,0,14,14">
+                    <StackPanel>
+                        <TextBlock Text="Low Stock" Style="{StaticResource MaterialDesignSubtitle2TextBlock}" Opacity="0.7" />
+                        <TextBlock Text="{Binding LowStockCount}" Foreground="#D32F2F" Style="{StaticResource MaterialDesignHeadline4TextBlock}" Margin="0,6,0,0" />
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <materialDesign:Card Padding="18" Width="190" UniformCornerRadius="10" Margin="0,0,14,14">
+                    <StackPanel>
+                        <TextBlock Text="Expiring (60d)" Style="{StaticResource MaterialDesignSubtitle2TextBlock}" Opacity="0.7" />
+                        <TextBlock Text="{Binding ExpiringSoonCount}" Foreground="#F57C00" Style="{StaticResource MaterialDesignHeadline4TextBlock}" Margin="0,6,0,0" />
+                    </StackPanel>
+                </materialDesign:Card>
+            </WrapPanel>
+
+            <!-- RECEPTIONIST KPI CARDS & QUICK ACTIONS -->
+            <StackPanel Visibility="{Binding IsReceptionist, Converter={StaticResource BoolToVis}}" Margin="0,0,0,12">
+                <WrapPanel>
+                    <materialDesign:Card Padding="20" Width="250" UniformCornerRadius="10" Margin="0,0,14,14">
+                        <StackPanel>
+                            <TextBlock Text="My Revenue Today (POS + Fees)" Style="{StaticResource MaterialDesignSubtitle2TextBlock}" Opacity="0.7" />
+                            <TextBlock Text="{Binding MyTodaysRevenue, StringFormat='Rs. {0:N0}'}" Foreground="#00796B" Style="{StaticResource MaterialDesignHeadline4TextBlock}" Margin="0,6,0,0" />
+                        </StackPanel>
+                    </materialDesign:Card>
+
+                    <materialDesign:Card Padding="20" Width="200" UniformCornerRadius="10" Margin="0,0,14,14">
+                        <StackPanel>
+                            <TextBlock Text="My Bills Today" Style="{StaticResource MaterialDesignSubtitle2TextBlock}" Opacity="0.7" />
+                            <TextBlock Text="{Binding MyTodaysBillCount}" Foreground="#1565C0" Style="{StaticResource MaterialDesignHeadline4TextBlock}" Margin="0,6,0,0" />
+                        </StackPanel>
+                    </materialDesign:Card>
+
+                    <materialDesign:Card Padding="20" Width="210" UniformCornerRadius="10" Margin="0,0,14,14">
+                        <StackPanel>
+                            <TextBlock Text="Pending Token Queue" Style="{StaticResource MaterialDesignSubtitle2TextBlock}" Opacity="0.7" />
+                            <TextBlock Text="{Binding PendingQueueCount}" Foreground="#EF6C00" Style="{StaticResource MaterialDesignHeadline4TextBlock}" Margin="0,6,0,0" />
+                        </StackPanel>
+                    </materialDesign:Card>
+                </WrapPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,4,0,16">
+                    <Button Content="Issue New Token / Appointment" Command="{Binding OpenBookTokenCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,10,0" />
+                    <Button Content="Open POS / Billing" Command="{Binding OpenPosCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,10,0" />
+                    <Button Content="View Inventory (Read-Only)" Command="{Binding OpenInventoryCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" />
+                </StackPanel>
             </StackPanel>
-        </materialDesign:Card>
 
-        <WrapPanel>
-            <materialDesign:Card Padding="20" Width="240" UniformCornerRadius="8" Margin="0,0,16,16">
-                <StackPanel>
-                    <TextBlock Text="Today's Appointments"
-                               Style="{StaticResource MaterialDesignSubtitle2TextBlock}"
-                               Opacity="0.7" />
-                    <TextBlock Text="{Binding TodaysAppointmentCount}"
-                               Style="{StaticResource MaterialDesignHeadline3TextBlock}"
-                               Margin="0,6,0,0" />
-                </StackPanel>
-            </materialDesign:Card>
+            <!-- LOWER SECTION: LIVE TOKEN QUEUE + PER-RECEPTIONIST COLLECTION -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.4*" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
-            <materialDesign:Card Padding="20" Width="240" UniformCornerRadius="8" Margin="0,0,16,16">
-                <StackPanel>
-                    <TextBlock Text="Low Stock Medicines"
-                               Style="{StaticResource MaterialDesignSubtitle2TextBlock}"
-                               Opacity="0.7" />
-                    <TextBlock Text="{Binding LowStockCount}"
-                               Foreground="#D32F2F"
-                               Style="{StaticResource MaterialDesignHeadline3TextBlock}"
-                               Margin="0,6,0,0" />
-                </StackPanel>
-            </materialDesign:Card>
+                <!-- Live Token Queue -->
+                <materialDesign:Card Grid.Column="0" Padding="16" UniformCornerRadius="10">
+                    <StackPanel>
+                        <TextBlock Text="Today's Live Token Queue" Style="{StaticResource MaterialDesignHeadline6TextBlock}" Margin="0,0,0,10" />
+                        <DataGrid ItemsSource="{Binding TodaysQueue}" AutoGenerateColumns="False" IsReadOnly="True" MaxHeight="300">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Token" Binding="{Binding TokenNumber}" Width="75" FontWeight="Bold" />
+                                <DataGridTextColumn Header="Time" Binding="{Binding AppointmentTime}" Width="75" />
+                                <DataGridTextColumn Header="Patient" Binding="{Binding Patient.FullName}" Width="*" />
+                                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100" />
+                                <DataGridTemplateColumn Header="Actions" Width="155">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Button Content="Call"
+                                                        Command="{Binding DataContext.CallTokenCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource MaterialDesignFlatButton}"
+                                                        Padding="6,2" />
+                                                <Button Content="Done"
+                                                        Command="{Binding DataContext.CompleteTokenCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource MaterialDesignFlatButton}"
+                                                        Padding="6,2" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </materialDesign:Card>
 
-            <materialDesign:Card Padding="20" Width="240" UniformCornerRadius="8" Margin="0,0,16,16">
-                <StackPanel>
-                    <TextBlock Text="Expiring Soon (60 Days)"
-                               Style="{StaticResource MaterialDesignSubtitle2TextBlock}"
-                               Opacity="0.7" />
-                    <TextBlock Text="{Binding ExpiringSoonCount}"
-                               Foreground="#EF6C00"
-                               Style="{StaticResource MaterialDesignHeadline3TextBlock}"
-                               Margin="0,6,0,0" />
-                </StackPanel>
-            </materialDesign:Card>
-
-            <materialDesign:Card Padding="20" Width="260" UniformCornerRadius="8" Margin="0,0,16,16">
-                <StackPanel>
-                    <TextBlock Text="Today's Revenue"
-                               Style="{StaticResource MaterialDesignSubtitle2TextBlock}"
-                               Opacity="0.7" />
-                    <TextBlock Text="{Binding TodaysRevenue, StringFormat='Rs. {0:N0}'}"
-                               Foreground="#00796B"
-                               Style="{StaticResource MaterialDesignHeadline3TextBlock}"
-                               Margin="0,6,0,0" />
-                </StackPanel>
-            </materialDesign:Card>
-        </WrapPanel>
-    </StackPanel>
+                <!-- Per-Receptionist Collection (Admin Only) -->
+                <materialDesign:Card Grid.Column="2"
+                                     Padding="16"
+                                     UniformCornerRadius="10"
+                                     Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}">
+                    <StackPanel>
+                        <TextBlock Text="Staff Collection Today" Style="{StaticResource MaterialDesignHeadline6TextBlock}" Margin="0,0,0,10" />
+                        <DataGrid ItemsSource="{Binding ReceptionistSummaries}" AutoGenerateColumns="False" IsReadOnly="True" MaxHeight="300">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Staff" Binding="{Binding ReceptionistName}" Width="*" />
+                                <DataGridTextColumn Header="Bills" Binding="{Binding BillCount}" Width="55" />
+                                <DataGridTextColumn Header="Collected" Binding="{Binding TotalCollected, StringFormat='Rs. {0:N0}'}" Width="105" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </materialDesign:Card>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>
-

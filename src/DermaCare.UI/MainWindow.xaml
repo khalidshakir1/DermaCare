@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="DermaCare Clinic Management"
-        Height="760" Width="1200"
+        Height="780" Width="1260"
         WindowStartupLocation="CenterScreen">
     <Window.InputBindings>
         <KeyBinding Key="F2" Command="{Binding QuickNewPatientCommand}" />
@@ -18,70 +18,98 @@
 
         <!-- Sidebar Navigation (hidden until authenticated) -->
         <Border Grid.Column="0"
-                Width="230"
+                Width="245"
                 Visibility="{Binding IsAuthenticated, Converter={StaticResource BoolToVis}}"
                 Background="{DynamicResource MaterialDesignPaper}"
                 BorderBrush="{DynamicResource MaterialDesignDivider}"
                 BorderThickness="0,0,1,0">
-            <DockPanel Margin="12,20">
+            <DockPanel Margin="12,18">
                 <StackPanel DockPanel.Dock="Top">
-                    <TextBlock Text="DermaCare"
-                               Style="{StaticResource MaterialDesignHeadline6TextBlock}"
-                               Margin="8,0,8,4" />
+                    <StackPanel Orientation="Horizontal" Margin="8,0,8,6">
+                        <materialDesign:PackIcon Kind="Stethoscope" Width="24" Height="24" Foreground="{DynamicResource PrimaryHueMidBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBlock Text="DermaCare"
+                                   Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <Border Background="{Binding RoleBadgeColor}"
+                            CornerRadius="4"
+                            Padding="8,3"
+                            HorizontalAlignment="Left"
+                            Margin="8,0,8,4">
+                        <TextBlock Text="{Binding RoleBadgeText}"
+                                   Foreground="White"
+                                   FontSize="10"
+                                   FontWeight="Bold" />
+                    </Border>
+
                     <TextBlock Text="{Binding CurrentUserDisplay}"
-                               Style="{StaticResource MaterialDesignCaptionTextBlock}"
-                               Opacity="0.7"
-                               Margin="8,0,8,20" />
+                               Style="{StaticResource MaterialDesignBody2TextBlock}"
+                               Opacity="0.8"
+                               Margin="8,0,8,18" />
 
-                    <Button Content="Dashboard"
-                            Command="{Binding NavigateDashboardCommand}"
-                            Style="{StaticResource MaterialDesignFlatButton}"
-                            HorizontalContentAlignment="Left"
-                            Margin="0,2" />
+                    <Button Command="{Binding NavigateDashboardCommand}" Style="{StaticResource MaterialDesignFlatButton}" HorizontalContentAlignment="Left" Margin="0,2">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ViewDashboard" Width="18" Height="18" Margin="0,0,10,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Dashboard" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
 
-                    <Button Content="Patients (F2 New)"
-                            Command="{Binding NavigatePatientsCommand}"
-                            Style="{StaticResource MaterialDesignFlatButton}"
-                            HorizontalContentAlignment="Left"
-                            Margin="0,2" />
+                    <Button Command="{Binding NavigatePatientsCommand}" Style="{StaticResource MaterialDesignFlatButton}" HorizontalContentAlignment="Left" Margin="0,2">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="AccountGroup" Width="18" Height="18" Margin="0,0,10,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Patients (F2 New)" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
 
-                    <Button Content="Doctors"
-                            Command="{Binding NavigateDoctorsCommand}"
-                            Style="{StaticResource MaterialDesignFlatButton}"
-                            HorizontalContentAlignment="Left"
-                            Margin="0,2" />
+                    <Button Command="{Binding NavigateDoctorsCommand}" Visibility="{Binding CanAccessDoctors, Converter={StaticResource BoolToVis}}" Style="{StaticResource MaterialDesignFlatButton}" HorizontalContentAlignment="Left" Margin="0,2">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Doctor" Width="18" Height="18" Margin="0,0,10,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Doctors" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
 
-                    <Button Content="Appointments (F3 Book)"
-                            Command="{Binding NavigateAppointmentsCommand}"
-                            Style="{StaticResource MaterialDesignFlatButton}"
-                            HorizontalContentAlignment="Left"
-                            Margin="0,2" />
+                    <Button Command="{Binding NavigateAppointmentsCommand}" Style="{StaticResource MaterialDesignFlatButton}" HorizontalContentAlignment="Left" Margin="0,2">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="TicketConfirmation" Width="18" Height="18" Margin="0,0,10,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Appointments &amp; Tokens (F3)" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
 
-                    <Button Content="Billing"
-                            Command="{Binding NavigateBillingCommand}"
-                            Visibility="{Binding CanAccessBilling, Converter={StaticResource BoolToVis}}"
-                            Style="{StaticResource MaterialDesignFlatButton}"
-                            HorizontalContentAlignment="Left"
-                            Margin="0,2" />
+                    <Button Command="{Binding NavigateBillingCommand}" Visibility="{Binding CanAccessBilling, Converter={StaticResource BoolToVis}}" Style="{StaticResource MaterialDesignFlatButton}" HorizontalContentAlignment="Left" Margin="0,2">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="CashRegister" Width="18" Height="18" Margin="0,0,10,0" VerticalAlignment="Center" />
+                            <TextBlock Text="POS &amp; Billing" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
 
-                    <Button Content="Inventory"
-                            Command="{Binding NavigateInventoryCommand}"
-                            Style="{StaticResource MaterialDesignFlatButton}"
-                            HorizontalContentAlignment="Left"
-                            Margin="0,2" />
+                    <Button Command="{Binding NavigateInventoryCommand}" Visibility="{Binding CanAccessInventory, Converter={StaticResource BoolToVis}}" Style="{StaticResource MaterialDesignFlatButton}" HorizontalContentAlignment="Left" Margin="0,2">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Pill" Width="18" Height="18" Margin="0,0,10,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Inventory" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
 
-                    <Button Content="Reports"
-                            Command="{Binding NavigateReportsCommand}"
-                            Style="{StaticResource MaterialDesignFlatButton}"
-                            HorizontalContentAlignment="Left"
-                            Margin="0,2" />
+                    <Button Command="{Binding NavigateSaleSummaryCommand}" Visibility="{Binding CanAccessSaleSummary, Converter={StaticResource BoolToVis}}" Style="{StaticResource MaterialDesignFlatButton}" HorizontalContentAlignment="Left" Margin="0,2">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ChartLine" Width="18" Height="18" Margin="0,0,10,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Sale Summary" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
 
-                    <Button Content="Settings &amp; Users"
-                            Command="{Binding NavigateSettingsCommand}"
-                            Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}"
-                            Style="{StaticResource MaterialDesignFlatButton}"
-                            HorizontalContentAlignment="Left"
-                            Margin="0,2" />
+                    <Button Command="{Binding NavigateReportsCommand}" Visibility="{Binding CanAccessReports, Converter={StaticResource BoolToVis}}" Style="{StaticResource MaterialDesignFlatButton}" HorizontalContentAlignment="Left" Margin="0,2">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="FileChart" Width="18" Height="18" Margin="0,0,10,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Reports" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Command="{Binding NavigateSettingsCommand}" Visibility="{Binding CanAccessSettings, Converter={StaticResource BoolToVis}}" Style="{StaticResource MaterialDesignFlatButton}" HorizontalContentAlignment="Left" Margin="0,2">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Cog" Width="18" Height="18" Margin="0,0,10,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Settings &amp; Fees" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
 
                 <StackPanel DockPanel.Dock="Bottom" VerticalAlignment="Bottom">
@@ -106,16 +134,33 @@
             <materialDesign:ColorZone Grid.Row="0"
                                       Height="56"
                                       Mode="PrimaryMid"
-                                      Padding="16,0"
+                                      Padding="18,0"
                                       Visibility="{Binding IsAuthenticated, Converter={StaticResource BoolToVis}}"
                                       VerticalAlignment="Stretch">
-                <TextBlock Text="{Binding PageTitle}"
-                           VerticalAlignment="Center"
-                           Style="{StaticResource MaterialDesignHeadline6TextBlock}" />
+                <DockPanel VerticalAlignment="Center">
+                    <Border DockPanel.Dock="Right"
+                            Background="#26FFFFFF"
+                            CornerRadius="12"
+                            Padding="10,4"
+                            VerticalAlignment="Center">
+                        <TextBlock Text="{Binding RoleBadgeText}"
+                                   Foreground="White"
+                                   FontSize="11"
+                                   FontWeight="Bold" />
+                    </Border>
+                    <TextBlock Text="{Binding PageTitle}"
+                               VerticalAlignment="Center"
+                               Style="{StaticResource MaterialDesignHeadline6TextBlock}" />
+                </DockPanel>
             </materialDesign:ColorZone>
 
             <ContentControl Grid.Row="1" Content="{Binding CurrentView}" />
+
+            <materialDesign:Snackbar Grid.Row="1"
+                                     MessageQueue="{Binding ToastQueue}"
+                                     HorizontalAlignment="Right"
+                                     VerticalAlignment="Bottom"
+                                     Margin="16" />
         </Grid>
     </Grid>
 </Window>
-

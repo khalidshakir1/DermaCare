@@ -93,6 +93,61 @@ public static class ReceiptPrintHelper
         return true;
     }
 
+    public static bool PrintThermalToken(Appointment appointment, ClinicProfile clinic)
+    {
+        var dialog = new PrintDialog();
+        if (dialog.ShowDialog() != true)
+            return false;
+
+        var doc = new FlowDocument
+        {
+            PageWidth = 280,
+            PagePadding = new Thickness(8),
+            ColumnWidth = 264,
+            FontFamily = new FontFamily("Consolas"),
+            FontSize = 10.5
+        };
+
+        void AddLine(string text, bool bold = false, TextAlignment align = TextAlignment.Left, double size = 10.5)
+        {
+            doc.Blocks.Add(new Paragraph(new Run(text))
+            {
+                Margin = new Thickness(0, 2, 0, 2),
+                TextAlignment = align,
+                FontSize = size,
+                FontWeight = bold ? FontWeights.Bold : FontWeights.Normal
+            });
+        }
+
+        AddLine(clinic.ClinicName, bold: true, align: TextAlignment.Center, size: 12);
+        if (!string.IsNullOrWhiteSpace(clinic.Address))
+            AddLine(clinic.Address, align: TextAlignment.Center, size: 9);
+        if (!string.IsNullOrWhiteSpace(clinic.Phone))
+            AddLine(clinic.Phone, align: TextAlignment.Center, size: 9);
+
+        AddLine("================================", align: TextAlignment.Center);
+        var tokenText = string.IsNullOrWhiteSpace(appointment.TokenNumber)
+            ? $"T-{appointment.AppointmentId:D3}"
+            : appointment.TokenNumber;
+        AddLine($"TOKEN: {tokenText}", bold: true, align: TextAlignment.Center, size: 22);
+        AddLine("================================", align: TextAlignment.Center);
+
+        AddLine($"Patient : {appointment.Patient?.FullName}", bold: true);
+        if (!string.IsNullOrWhiteSpace(appointment.Patient?.PatientCode))
+            AddLine($"Code    : {appointment.Patient.PatientCode}");
+        AddLine($"Doctor  : {appointment.Doctor?.User?.FullName ?? "Attending Doctor"}");
+        AddLine($"Type    : {appointment.Type}");
+        AddLine($"Date    : {appointment.AppointmentDate:dd/MM/yyyy}");
+        AddLine($"Time    : {appointment.AppointmentTime:hh\\:mm}");
+
+        AddLine("--------------------------------", align: TextAlignment.Center);
+        AddLine("Please wait for your token", align: TextAlignment.Center, bold: true, size: 10);
+        AddLine("number to be called.", align: TextAlignment.Center, size: 10);
+
+        dialog.PrintDocument(((IDocumentPaginatorSource)doc).DocumentPaginator, $"Token {tokenText}");
+        return true;
+    }
+
     public static bool PrintPrescription(MedicalRecord record, Patient patient, ClinicProfile clinic)
     {
         var dialog = new PrintDialog();

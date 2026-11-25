@@ -67,23 +67,26 @@
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Service Catalog">
+            <TabItem Header="Fee Schedule &amp; Services">
                 <Grid Margin="16">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
-                        <TextBox Width="220" Text="{Binding NewServiceName, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Service Name" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,8,0" />
-                        <TextBox Width="110" Text="{Binding NewServicePrice, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Price" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,8,0" />
-                        <TextBox Width="140" Text="{Binding NewServiceCategory, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Category" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,8,0" />
-                        <Button Content="Add Service" Command="{Binding AddServiceCommand}" Style="{StaticResource MaterialDesignRaisedButton}" />
-                    </StackPanel>
-                    <DataGrid Grid.Row="1" ItemsSource="{Binding Services}" AutoGenerateColumns="False" IsReadOnly="True">
+                    <WrapPanel Grid.Row="0" Margin="0,0,0,12">
+                        <TextBox Width="210" Text="{Binding NewServiceName, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Service / Consultation Name" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,8,6" />
+                        <TextBox Width="110" Text="{Binding NewServicePrice, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Fee (Rs.)" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,8,6" />
+                        <TextBox Width="130" Text="{Binding NewServiceCategory, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Category" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,8,6" />
+                        <Button Content="Add New" Command="{Binding AddServiceCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,6,6" />
+                        <Button Content="Update Selected" Command="{Binding UpdateServiceCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,6,6" />
+                        <Button Content="Toggle Active" Command="{Binding ToggleServiceActiveCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,6,6" />
+                        <Button Content="Delete" Command="{Binding DeleteServiceCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,0,6" />
+                    </WrapPanel>
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding Services}" SelectedItem="{Binding SelectedService}" AutoGenerateColumns="False" IsReadOnly="True">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Service" Binding="{Binding ServiceName}" Width="240" />
+                            <DataGridTextColumn Header="Service / Consultation" Binding="{Binding ServiceName}" Width="240" />
                             <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="150" />
-                            <DataGridTextColumn Header="Price" Binding="{Binding DefaultPrice, StringFormat=C}" Width="120" />
+                            <DataGridTextColumn Header="Fee (PKR)" Binding="{Binding DefaultPrice, StringFormat='Rs. {0:N0}'}" Width="120" />
                             <DataGridCheckBoxColumn Header="Active" Binding="{Binding IsActive}" Width="*" />
                         </DataGrid.Columns>
                     </DataGrid>

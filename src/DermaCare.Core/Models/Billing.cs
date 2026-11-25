@@ -18,17 +18,20 @@ public class Invoice
     public decimal Subtotal { get; set; }
     public decimal DiscountAmount { get; set; }
     public decimal DiscountPercent { get; set; }
+    public string? DiscountReason { get; set; }
     public decimal TotalAmount { get; set; }
     public decimal PaidAmount { get; set; }
     public InvoiceStatus Status { get; set; } = InvoiceStatus.Draft;
     public DateTime IssuedAt { get; set; } = DateTime.UtcNow;
     public DateTime? PaidAt { get; set; }
+    public int CollectedByUserId { get; set; }
     public string? Notes { get; set; }
 
     public decimal BalanceDue => Math.Max(0m, TotalAmount - PaidAmount);
 
     public Patient? Patient { get; set; }
     public Appointment? Appointment { get; set; }
+    public User? CollectedByUser { get; set; }
     public ICollection<InvoiceItem> Items { get; set; } = new List<InvoiceItem>();
     public ICollection<Payment> Payments { get; set; } = new List<Payment>();
 }

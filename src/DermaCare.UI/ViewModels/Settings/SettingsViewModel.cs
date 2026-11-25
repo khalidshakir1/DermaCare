@@ -22,6 +22,7 @@ public class SettingsViewModel : BaseViewModel
     private string _newServiceName = string.Empty;
     private decimal _newServicePrice;
     private string _newServiceCategory = "Consultation";
+    private ServiceItem? _selectedService;
     private string _backupFolder = @"C:\DermaCareBackups";
     private string? _statusMessage;
 
@@ -42,6 +43,9 @@ public class SettingsViewModel : BaseViewModel
         ApproveDoctorCommand = new RelayCommand(async () => await ApproveDoctorAsync(), () => SelectedPendingDoctor is not null);
         RejectDoctorCommand = new RelayCommand(async () => await RejectDoctorAsync(), () => SelectedPendingDoctor is not null);
         AddServiceCommand = new RelayCommand(async () => await AddServiceAsync());
+        UpdateServiceCommand = new RelayCommand(async () => await UpdateServiceAsync(), () => SelectedService is not null);
+        ToggleServiceActiveCommand = new RelayCommand(async () => await ToggleServiceActiveAsync(), () => SelectedService is not null);
+        DeleteServiceCommand = new RelayCommand(async () => await DeleteServiceAsync(), () => SelectedService is not null);
         BackupCommand = new RelayCommand(async () => await BackupAsync());
 
         _ = LoadAsync();
@@ -64,6 +68,19 @@ public class SettingsViewModel : BaseViewModel
     public string NewServiceName { get => _newServiceName; set => SetProperty(ref _newServiceName, value); }
     public decimal NewServicePrice { get => _newServicePrice; set => SetProperty(ref _newServicePrice, value); }
     public string NewServiceCategory { get => _newServiceCategory; set => SetProperty(ref _newServiceCategory, value); }
+    public ServiceItem? SelectedService
+    {
+        get => _selectedService;
+        set
+        {
+            if (SetProperty(ref _selectedService, value) && value is not null)
+            {
+                NewServiceName = value.ServiceName;
+                NewServicePrice = value.DefaultPrice;
+                NewServiceCategory = value.Category;
+            }
+        }
+    }
     public string BackupFolder { get => _backupFolder; set => SetProperty(ref _backupFolder, value); }
 
     public string? StatusMessage
@@ -78,6 +95,9 @@ public class SettingsViewModel : BaseViewModel
     public ICommand ApproveDoctorCommand { get; }
     public ICommand RejectDoctorCommand { get; }
     public ICommand AddServiceCommand { get; }
+    public ICommand UpdateServiceCommand { get; }
+    public ICommand ToggleServiceActiveCommand { get; }
+    public ICommand DeleteServiceCommand { get; }
     public ICommand BackupCommand { get; }
 
     private async Task LoadAsync()
@@ -170,6 +190,36 @@ public class SettingsViewModel : BaseViewModel
         NewServiceName = string.Empty;
         NewServicePrice = 0;
         StatusMessage = "Service added.";
+        await RefreshServicesAsync();
+    }
+
+    private async Task UpdateServiceAsync()
+    {
+        if (SelectedService is null) return;
+        SelectedService.ServiceName = NewServiceName;
+        SelectedService.DefaultPrice = NewServicePrice;
+        SelectedService.Category = NewServiceCategory;
+        var result = await _adminService.UpdateServiceAsync(SelectedService);
+        StatusMessage = result.Success ? $"Updated '{result.Data?.ServiceName}'." : result.ErrorMessage;
+        await RefreshServicesAsync();
+    }
+
+    private async Task ToggleServiceActiveAsync()
+    {
+        if (SelectedService is null) return;
+        await _adminService.ToggleServiceActiveAsync(SelectedService.ServiceId);
+        StatusMessage = $"Toggled status for '{SelectedService.ServiceName}'.";
+        await RefreshServicesAsync();
+    }
+
+    private async Task DeleteServiceAsync()
+    {
+        if (SelectedService is null) return;
+        var result = await _adminService.DeleteServiceAsync(SelectedService.ServiceId);
+        StatusMessage = result.Success ? "Service removed / deactivated." : result.ErrorMessage;
+        SelectedService = null;
+        NewServiceName = string.Empty;
+        NewServicePrice = 0;
         await RefreshServicesAsync();
     }
 

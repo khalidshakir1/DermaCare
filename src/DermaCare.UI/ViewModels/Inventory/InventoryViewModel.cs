@@ -70,6 +70,7 @@ public class InventoryViewModel : BaseViewModel
     public IReadOnlyList<string> Categories { get; }
     public IReadOnlyList<string> Units { get; }
     public IReadOnlyList<StockTransactionType> AdjustTypes { get; }
+    public bool CanEditInventory => _session.IsAdmin;
 
     public string SearchQuery { get => _searchQuery; set => SetProperty(ref _searchQuery, value); }
 

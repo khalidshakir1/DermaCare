@@ -12,6 +12,7 @@ public class AppointmentFormViewModel : BaseViewModel
     private readonly IAppointmentService _appointmentService;
     private readonly IPatientService _patientService;
     private readonly IDoctorService _doctorService;
+    private readonly IBillingService _billingService;
     private readonly INavigationService _navigationService;
 
     private Patient? _selectedPatient;
@@ -20,17 +21,20 @@ public class AppointmentFormViewModel : BaseViewModel
     private string _appointmentTime = "09:00";
     private AppointmentType _type = AppointmentType.Consultation;
     private string? _notes;
+    private bool _printTokenOnSave = true;
     private string? _errorMessage;
 
     public AppointmentFormViewModel(
         IAppointmentService appointmentService,
         IPatientService patientService,
         IDoctorService doctorService,
+        IBillingService billingService,
         INavigationService navigationService)
     {
         _appointmentService = appointmentService;
         _patientService = patientService;
         _doctorService = doctorService;
+        _billingService = billingService;
         _navigationService = navigationService;
 
         Patients = new ObservableCollection<Patient>();
@@ -51,6 +55,7 @@ public class AppointmentFormViewModel : BaseViewModel
     public string AppointmentTime { get => _appointmentTime; set => SetProperty(ref _appointmentTime, value); }
     public AppointmentType Type { get => _type; set => SetProperty(ref _type, value); }
     public string? Notes { get => _notes; set => SetProperty(ref _notes, value); }
+    public bool PrintTokenOnSave { get => _printTokenOnSave; set => SetProperty(ref _printTokenOnSave, value); }
 
     public string? ErrorMessage
     {
@@ -118,6 +123,14 @@ public class AppointmentFormViewModel : BaseViewModel
         {
             ErrorMessage = result.ErrorMessage;
             return;
+        }
+
+        if (PrintTokenOnSave && result.Data is not null)
+        {
+            result.Data.Patient = SelectedPatient;
+            result.Data.Doctor = SelectedDoctor;
+            var clinic = await _billingService.GetClinicProfileAsync();
+            ReceiptPrintHelper.PrintThermalToken(result.Data, clinic);
         }
 
         _navigationService.NavigateTo<AppointmentCalendarViewModel>();

@@ -51,7 +51,11 @@
             <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}"
                      materialDesign:HintAssist.Hint="Notes"
                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                     Margin="0,0,0,14" />
+                     Margin="0,0,0,12" />
+
+            <CheckBox IsChecked="{Binding PrintTokenOnSave}"
+                      Content="Print 80mm Token Slip immediately after booking"
+                      Margin="0,0,0,14" />
 
             <TextBlock Text="{Binding ErrorMessage}"
                        Foreground="{DynamicResource MaterialDesignValidationErrorBrush}"

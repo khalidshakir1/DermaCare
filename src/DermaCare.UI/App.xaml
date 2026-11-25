@@ -67,6 +67,9 @@
             <DataTemplate DataType="{x:Type repVm:ReportsViewModel}">
                 <repViews:ReportsView />
             </DataTemplate>
+            <DataTemplate DataType="{x:Type repVm:SaleSummaryViewModel}">
+                <repViews:SaleSummaryView />
+            </DataTemplate>
             <DataTemplate DataType="{x:Type setVm:SettingsViewModel}">
                 <setViews:SettingsView />
             </DataTemplate>

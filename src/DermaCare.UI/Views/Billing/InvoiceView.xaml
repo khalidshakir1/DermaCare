@@ -167,21 +167,33 @@
                              Style="{StaticResource MaterialDesignOutlinedTextBox}"
                              Margin="0,0,0,10" />
 
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <TextBox Width="140"
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBox Width="120"
                                  Text="{Binding DiscountAmount, UpdateSourceTrigger=PropertyChanged}"
                                  materialDesign:HintAssist.Hint="Discount (Rs.)"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                  Margin="0,0,8,0" />
-                        <TextBox Width="130"
+                        <TextBox Width="110"
                                  Text="{Binding DiscountPercent, UpdateSourceTrigger=PropertyChanged}"
                                  materialDesign:HintAssist.Hint="Discount (%)"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                 Margin="0,0,12,0" />
-                        <TextBlock Text="{Binding DraftSubtotal, StringFormat='Subtotal: Rs. {0:N0}'}"
-                                   VerticalAlignment="Center"
-                                   Opacity="0.75" />
+                                 Margin="0,0,8,0" />
+                        <Button Content="10%" Command="{Binding ApplyPercentPresetCommand}" CommandParameter="10" Style="{StaticResource MaterialDesignOutlinedButton}" Padding="8,2" Margin="0,0,4,0" />
+                        <Button Content="20%" Command="{Binding ApplyPercentPresetCommand}" CommandParameter="20" Style="{StaticResource MaterialDesignOutlinedButton}" Padding="8,2" Margin="0,0,4,0" />
+                        <Button Content="50%" Command="{Binding ApplyPercentPresetCommand}" CommandParameter="50" Style="{StaticResource MaterialDesignOutlinedButton}" Padding="8,2" Margin="0,0,4,0" />
+                        <Button Content="Full (100%)" Command="{Binding ApplyFullDiscountCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Padding="8,2" />
                     </StackPanel>
+
+                    <DockPanel Margin="0,0,0,10">
+                        <TextBlock DockPanel.Dock="Right"
+                                   Text="{Binding DraftSubtotal, StringFormat='Subtotal: Rs. {0:N0}'}"
+                                   VerticalAlignment="Center"
+                                   Opacity="0.75"
+                                   Margin="12,0,0,0" />
+                        <TextBox Text="{Binding DiscountReason, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Discount Reference / Reason (e.g. Dr. Reference)"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" />
+                    </DockPanel>
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                         <TextBox Width="135"

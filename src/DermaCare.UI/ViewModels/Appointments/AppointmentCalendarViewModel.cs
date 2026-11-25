@@ -13,26 +13,36 @@ public class AppointmentCalendarViewModel : BaseViewModel
 {
     private readonly IAppointmentService _appointmentService;
     private readonly IDoctorService _doctorService;
+    private readonly IBillingService _billingService;
     private readonly INavigationService _navigationService;
 
     private DateTime _selectedDate = DateTime.Today;
     private Doctor? _selectedDoctorFilter;
     private Appointment? _selectedAppointment;
     private string _cancellationReason = string.Empty;
+    private DateTime _historyFromDate = DateTime.Today.AddDays(-7);
+    private DateTime _historyToDate = DateTime.Today;
+    private int _totalTokensIssued;
+    private int _completedTokensCount;
 
     public AppointmentCalendarViewModel(
         IAppointmentService appointmentService,
         IDoctorService doctorService,
+        IBillingService billingService,
         INavigationService navigationService)
     {
         _appointmentService = appointmentService;
         _doctorService = doctorService;
+        _billingService = billingService;
         _navigationService = navigationService;
 
         Appointments = new ObservableCollection<Appointment>();
+        TokenHistory = new ObservableCollection<Appointment>();
         Doctors = new ObservableCollection<Doctor>();
 
         RefreshCommand = new RelayCommand(async () => await LoadAppointmentsAsync());
+        FilterTokenHistoryCommand = new RelayCommand(async () => await LoadTokenHistoryAsync());
+        PrintTokenCommand = new RelayCommand(async () => await PrintSelectedTokenAsync(), () => SelectedAppointment is not null);
         NewAppointmentCommand = new RelayCommand(() =>
             _navigationService.NavigateTo<AppointmentFormViewModel>(vm => _ = vm.InitializeAsync(isWalkIn: false, SelectedDate)));
         WalkInCommand = new RelayCommand(() =>
@@ -60,7 +70,13 @@ public class AppointmentCalendarViewModel : BaseViewModel
     }
 
     public ObservableCollection<Appointment> Appointments { get; }
+    public ObservableCollection<Appointment> TokenHistory { get; }
     public ObservableCollection<Doctor> Doctors { get; }
+
+    public DateTime HistoryFromDate { get => _historyFromDate; set => SetProperty(ref _historyFromDate, value); }
+    public DateTime HistoryToDate { get => _historyToDate; set => SetProperty(ref _historyToDate, value); }
+    public int TotalTokensIssued { get => _totalTokensIssued; private set => SetProperty(ref _totalTokensIssued, value); }
+    public int CompletedTokensCount { get => _completedTokensCount; private set => SetProperty(ref _completedTokensCount, value); }
 
     public DateTime SelectedDate
     {
@@ -95,6 +111,8 @@ public class AppointmentCalendarViewModel : BaseViewModel
     }
 
     public ICommand RefreshCommand { get; }
+    public ICommand FilterTokenHistoryCommand { get; }
+    public ICommand PrintTokenCommand { get; }
     public ICommand NewAppointmentCommand { get; }
     public ICommand WalkInCommand { get; }
     public ICommand ConfirmCommand { get; }
@@ -112,6 +130,7 @@ public class AppointmentCalendarViewModel : BaseViewModel
             Doctors.Add(d);
 
         await LoadAppointmentsAsync();
+        await LoadTokenHistoryAsync();
     }
 
     public async Task LoadAppointmentsAsync()
@@ -120,6 +139,23 @@ public class AppointmentCalendarViewModel : BaseViewModel
         Appointments.Clear();
         foreach (var a in items)
             Appointments.Add(a);
+    }
+
+    public async Task LoadTokenHistoryAsync()
+    {
+        var history = await _appointmentService.GetTokenHistoryAsync(HistoryFromDate, HistoryToDate);
+        TokenHistory.Clear();
+        foreach (var item in history)
+            TokenHistory.Add(item);
+        TotalTokensIssued = TokenHistory.Count;
+        CompletedTokensCount = TokenHistory.Count(a => a.Status == AppointmentStatus.Completed);
+    }
+
+    private async Task PrintSelectedTokenAsync()
+    {
+        if (SelectedAppointment is null) return;
+        var clinic = await _billingService.GetClinicProfileAsync();
+        ReceiptPrintHelper.PrintThermalToken(SelectedAppointment, clinic);
     }
 
     private async Task ChangeStatusAsync(AppointmentStatus status, string? reason = null)
