@@ -112,4 +112,24 @@ public class BillingServiceTests
         Assert.Equal(InvoiceStatus.Paid, invoice.Status);
         Assert.Equal(200m, invoice.PaidAmount);
     }
+
+    [Fact]
+    public async Task CreateInvoiceAsync_WithoutPatientInfo_CreatesAnonymousWalkInBill()
+    {
+        var repo = new Mock<IBillingRepository>();
+        repo.Setup(r => r.GenerateNextBillNumberAsync(It.IsAny<CancellationToken>())).ReturnsAsync("BILL-0099");
+        var sut = new BillingService(repo.Object, new CurrentSession());
+
+        var items = new[]
+        {
+            new InvoiceItem { ItemType = BillItemType.Custom, Description = "Sunblock SPF 50+", Quantity = 1, UnitPrice = 1800m }
+        };
+
+        var result = await sut.CreateInvoiceAsync(null, null, items);
+
+        Assert.True(result.Success);
+        Assert.Null(result.Data?.PatientId);
+        Assert.Equal("Walk-In Customer", result.Data?.DisplayCustomerName);
+        Assert.Equal(1800m, result.Data?.TotalAmount);
+    }
 }

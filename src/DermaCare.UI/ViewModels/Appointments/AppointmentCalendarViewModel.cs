@@ -17,7 +17,6 @@ public class AppointmentCalendarViewModel : BaseViewModel
     private readonly INavigationService _navigationService;
 
     private DateTime _selectedDate = DateTime.Today;
-    private Doctor? _selectedDoctorFilter;
     private Appointment? _selectedAppointment;
     private string _cancellationReason = string.Empty;
     private DateTime _historyFromDate = DateTime.Today.AddDays(-7);
@@ -38,15 +37,13 @@ public class AppointmentCalendarViewModel : BaseViewModel
 
         Appointments = new ObservableCollection<Appointment>();
         TokenHistory = new ObservableCollection<Appointment>();
-        Doctors = new ObservableCollection<Doctor>();
 
         RefreshCommand = new RelayCommand(async () => await LoadAppointmentsAsync());
         FilterTokenHistoryCommand = new RelayCommand(async () => await LoadTokenHistoryAsync());
         PrintTokenCommand = new RelayCommand(async () => await PrintSelectedTokenAsync(), () => SelectedAppointment is not null);
         NewAppointmentCommand = new RelayCommand(() =>
             _navigationService.NavigateTo<AppointmentFormViewModel>(vm => _ = vm.InitializeAsync(isWalkIn: false, SelectedDate)));
-        WalkInCommand = new RelayCommand(() =>
-            _navigationService.NavigateTo<AppointmentFormViewModel>(vm => _ = vm.InitializeAsync(isWalkIn: true, DateTime.Today)));
+        WalkInCommand = new RelayCommand(async () => await IssueQuickWalkInTokenAsync());
         ConfirmCommand = new RelayCommand(
             async () => await ChangeStatusAsync(AppointmentStatus.Confirmed),
             () => SelectedAppointment is { Status: AppointmentStatus.Scheduled });
@@ -60,7 +57,7 @@ public class AppointmentCalendarViewModel : BaseViewModel
             () => _navigationService.NavigateTo<ConsultationViewModel>(vm => vm.Initialize(SelectedAppointment!)),
             () => SelectedAppointment is { Status: AppointmentStatus.InProgress or AppointmentStatus.Completed });
         GenerateBillCommand = new RelayCommand(
-            () => _navigationService.NavigateTo<InvoiceViewModel>(vm => vm.PreselectPatient(SelectedAppointment!.PatientId)),
+            () => _navigationService.NavigateTo<InvoiceViewModel>(vm => vm.PreselectCustomer(SelectedAppointment!.DisplayPatientName, SelectedAppointment.PatientId)),
             () => SelectedAppointment is not null);
         CancelAppointmentCommand = new RelayCommand(
             async () => await ChangeStatusAsync(AppointmentStatus.Cancelled, CancellationReason),
@@ -71,7 +68,6 @@ public class AppointmentCalendarViewModel : BaseViewModel
 
     public ObservableCollection<Appointment> Appointments { get; }
     public ObservableCollection<Appointment> TokenHistory { get; }
-    public ObservableCollection<Doctor> Doctors { get; }
 
     public DateTime HistoryFromDate { get => _historyFromDate; set => SetProperty(ref _historyFromDate, value); }
     public DateTime HistoryToDate { get => _historyToDate; set => SetProperty(ref _historyToDate, value); }
@@ -84,16 +80,6 @@ public class AppointmentCalendarViewModel : BaseViewModel
         set
         {
             if (SetProperty(ref _selectedDate, value))
-                _ = LoadAppointmentsAsync();
-        }
-    }
-
-    public Doctor? SelectedDoctorFilter
-    {
-        get => _selectedDoctorFilter;
-        set
-        {
-            if (SetProperty(ref _selectedDoctorFilter, value))
                 _ = LoadAppointmentsAsync();
         }
     }
@@ -124,21 +110,40 @@ public class AppointmentCalendarViewModel : BaseViewModel
 
     private async Task InitializeAsync()
     {
-        var docs = await _doctorService.GetAllActiveAsync();
-        Doctors.Clear();
-        foreach (var d in docs)
-            Doctors.Add(d);
-
         await LoadAppointmentsAsync();
         await LoadTokenHistoryAsync();
     }
 
     public async Task LoadAppointmentsAsync()
     {
-        var items = await _appointmentService.GetByDateAsync(SelectedDate, SelectedDoctorFilter?.DoctorId);
+        var items = await _appointmentService.GetByDateAsync(SelectedDate);
         Appointments.Clear();
         foreach (var a in items)
             Appointments.Add(a);
+    }
+
+    private async Task IssueQuickWalkInTokenAsync()
+    {
+        var doctors = await _doctorService.GetAllActiveAsync();
+        var doc = doctors.FirstOrDefault();
+        var walkIn = new Appointment
+        {
+            DoctorId = doc?.DoctorId ?? 0,
+            AppointmentDate = DateTime.Today,
+            AppointmentTime = DateTime.Now.TimeOfDay,
+            Type = AppointmentType.WalkIn
+        };
+
+        var result = await _appointmentService.BookAsync(walkIn);
+        if (result.Success && result.Data is not null)
+        {
+            result.Data.Doctor = doc;
+            var clinic = await _billingService.GetClinicProfileAsync();
+            ReceiptPrintHelper.PrintThermalToken(result.Data, clinic);
+            SelectedDate = DateTime.Today;
+            await LoadAppointmentsAsync();
+            await LoadTokenHistoryAsync();
+        }
     }
 
     public async Task LoadTokenHistoryAsync()

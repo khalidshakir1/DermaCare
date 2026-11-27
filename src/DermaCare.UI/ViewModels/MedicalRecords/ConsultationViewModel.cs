@@ -142,7 +142,7 @@ public class ConsultationViewModel : BaseViewModel
         {
             Photos.Add(new PatientPhoto
             {
-                PatientId = _appointment.PatientId,
+                PatientId = _appointment.PatientId ?? 0,
                 FilePath = dialog.FileName,
                 PhotoType = PhotoType.Before,
                 TakenAt = DateTime.UtcNow
@@ -157,7 +157,7 @@ public class ConsultationViewModel : BaseViewModel
         var record = new MedicalRecord
         {
             AppointmentId = _appointment.AppointmentId,
-            PatientId = _appointment.PatientId,
+            PatientId = _appointment.PatientId ?? 0,
             DoctorId = _appointment.DoctorId,
             ChiefComplaint = ChiefComplaint,
             Diagnosis = Diagnosis,

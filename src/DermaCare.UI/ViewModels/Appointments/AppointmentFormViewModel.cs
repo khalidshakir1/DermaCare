@@ -10,13 +10,14 @@ namespace DermaCare.UI.ViewModels.Appointments;
 public class AppointmentFormViewModel : BaseViewModel
 {
     private readonly IAppointmentService _appointmentService;
-    private readonly IPatientService _patientService;
     private readonly IDoctorService _doctorService;
     private readonly IBillingService _billingService;
     private readonly INavigationService _navigationService;
 
-    private Patient? _selectedPatient;
-    private Doctor? _selectedDoctor;
+    private Doctor? _clinicDoctor;
+    private string _patientName = string.Empty;
+    private string _patientPhone = string.Empty;
+    private ServiceItem? _selectedService;
     private DateTime _appointmentDate = DateTime.Today;
     private string _appointmentTime = "09:00";
     private AppointmentType _type = AppointmentType.Consultation;
@@ -26,31 +27,30 @@ public class AppointmentFormViewModel : BaseViewModel
 
     public AppointmentFormViewModel(
         IAppointmentService appointmentService,
-        IPatientService patientService,
         IDoctorService doctorService,
         IBillingService billingService,
         INavigationService navigationService)
     {
         _appointmentService = appointmentService;
-        _patientService = patientService;
         _doctorService = doctorService;
         _billingService = billingService;
         _navigationService = navigationService;
 
-        Patients = new ObservableCollection<Patient>();
-        Doctors = new ObservableCollection<Doctor>();
-        AppointmentTypes = Enum.GetValues<AppointmentType>();
+        Services = new ObservableCollection<ServiceItem>();
+        AppointmentTypes = Enum.GetValues<AppointmentType>()
+            .Where(t => t != AppointmentType.WalkIn)
+            .ToList();
 
         SaveCommand = new RelayCommand(async () => await SaveAsync());
         CancelCommand = new RelayCommand(() => _navigationService.NavigateTo<AppointmentCalendarViewModel>());
     }
 
-    public ObservableCollection<Patient> Patients { get; }
-    public ObservableCollection<Doctor> Doctors { get; }
+    public ObservableCollection<ServiceItem> Services { get; }
     public IReadOnlyList<AppointmentType> AppointmentTypes { get; }
 
-    public Patient? SelectedPatient { get => _selectedPatient; set => SetProperty(ref _selectedPatient, value); }
-    public Doctor? SelectedDoctor { get => _selectedDoctor; set => SetProperty(ref _selectedDoctor, value); }
+    public string PatientName { get => _patientName; set => SetProperty(ref _patientName, value); }
+    public string PatientPhone { get => _patientPhone; set => SetProperty(ref _patientPhone, value); }
+    public ServiceItem? SelectedService { get => _selectedService; set => SetProperty(ref _selectedService, value); }
     public DateTime AppointmentDate { get => _appointmentDate; set => SetProperty(ref _appointmentDate, value); }
     public string AppointmentTime { get => _appointmentTime; set => SetProperty(ref _appointmentTime, value); }
     public AppointmentType Type { get => _type; set => SetProperty(ref _type, value); }
@@ -79,27 +79,31 @@ public class AppointmentFormViewModel : BaseViewModel
         if (isWalkIn)
             AppointmentTime = DateTime.Now.ToString("HH:mm");
 
-        var patients = await _patientService.SearchAsync(null);
-        Patients.Clear();
-        foreach (var p in patients)
-            Patients.Add(p);
-
         var doctors = await _doctorService.GetAllActiveAsync();
-        Doctors.Clear();
-        foreach (var d in doctors)
-            Doctors.Add(d);
+        _clinicDoctor = doctors.FirstOrDefault();
 
-        SelectedPatient = Patients.FirstOrDefault();
-        SelectedDoctor = Doctors.FirstOrDefault();
+        var services = await _billingService.GetActiveServicesAsync();
+        Services.Clear();
+        foreach (var s in services)
+            Services.Add(s);
+        SelectedService = Services.FirstOrDefault();
     }
 
     private async Task SaveAsync()
     {
         ErrorMessage = null;
-        if (SelectedPatient is null || SelectedDoctor is null)
+        if (Type != AppointmentType.WalkIn)
         {
-            ErrorMessage = "Please select both a patient and a doctor.";
-            return;
+            if (string.IsNullOrWhiteSpace(PatientName))
+            {
+                ErrorMessage = "Please enter patient name.";
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(PatientPhone))
+            {
+                ErrorMessage = "Please enter patient phone number.";
+                return;
+            }
         }
 
         if (!TimeSpan.TryParse(AppointmentTime, out var time))
@@ -108,14 +112,23 @@ public class AppointmentFormViewModel : BaseViewModel
             return;
         }
 
+        var combinedNotes = Notes;
+        if (SelectedService is not null)
+        {
+            combinedNotes = string.IsNullOrWhiteSpace(Notes)
+                ? SelectedService.ServiceName
+                : $"{SelectedService.ServiceName} — {Notes.Trim()}";
+        }
+
         var appointment = new Appointment
         {
-            PatientId = SelectedPatient.PatientId,
-            DoctorId = SelectedDoctor.DoctorId,
+            PatientName = PatientName,
+            PatientPhone = PatientPhone,
+            DoctorId = _clinicDoctor?.DoctorId ?? 0,
             AppointmentDate = AppointmentDate,
             AppointmentTime = time,
             Type = Type,
-            Notes = Notes
+            Notes = combinedNotes
         };
 
         var result = await _appointmentService.BookAsync(appointment);
@@ -127,8 +140,7 @@ public class AppointmentFormViewModel : BaseViewModel
 
         if (PrintTokenOnSave && result.Data is not null)
         {
-            result.Data.Patient = SelectedPatient;
-            result.Data.Doctor = SelectedDoctor;
+            result.Data.Doctor = _clinicDoctor;
             var clinic = await _billingService.GetClinicProfileAsync();
             ReceiptPrintHelper.PrintThermalToken(result.Data, clinic);
         }

@@ -4,21 +4,24 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
     <materialDesign:Card Margin="24" Padding="24" MaxWidth="620" UniformCornerRadius="8" VerticalAlignment="Top">
         <StackPanel>
-            <TextBlock Text="Book Appointment"
+            <TextBlock Text="Book Appointment (P-Token)"
                        Style="{StaticResource MaterialDesignHeadline5TextBlock}"
                        Margin="0,0,0,20" />
 
-            <ComboBox ItemsSource="{Binding Patients}"
-                      SelectedItem="{Binding SelectedPatient}"
-                      DisplayMemberPath="FullName"
-                      materialDesign:HintAssist.Hint="Patient *"
-                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                      Margin="0,0,0,14" />
+            <TextBox Text="{Binding PatientName, UpdateSourceTrigger=PropertyChanged}"
+                     materialDesign:HintAssist.Hint="Patient Name *"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                     Margin="0,0,0,14" />
 
-            <ComboBox ItemsSource="{Binding Doctors}"
-                      SelectedItem="{Binding SelectedDoctor}"
-                      DisplayMemberPath="User.FullName"
-                      materialDesign:HintAssist.Hint="Doctor *"
+            <TextBox Text="{Binding PatientPhone, UpdateSourceTrigger=PropertyChanged}"
+                     materialDesign:HintAssist.Hint="Phone Number (03XX-XXXXXXX) *"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                     Margin="0,0,0,14" />
+
+            <ComboBox ItemsSource="{Binding Services}"
+                      SelectedItem="{Binding SelectedService}"
+                      DisplayMemberPath="ServiceName"
+                      materialDesign:HintAssist.Hint="Service / Procedure (Optional)"
                       Style="{StaticResource MaterialDesignOutlinedComboBox}"
                       Margin="0,0,0,14" />
 

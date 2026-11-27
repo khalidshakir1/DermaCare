@@ -13,7 +13,8 @@ public class Invoice
 {
     public int InvoiceId { get; set; }
     public string BillNumber { get; set; } = string.Empty;
-    public int PatientId { get; set; }
+    public int? PatientId { get; set; }
+    public string? CustomerName { get; set; }
     public int? AppointmentId { get; set; }
     public decimal Subtotal { get; set; }
     public decimal DiscountAmount { get; set; }
@@ -28,6 +29,9 @@ public class Invoice
     public string? Notes { get; set; }
 
     public decimal BalanceDue => Math.Max(0m, TotalAmount - PaidAmount);
+    public string DisplayCustomerName => !string.IsNullOrWhiteSpace(CustomerName)
+        ? CustomerName
+        : (Patient?.FullName ?? "Walk-In Customer");
 
     public Patient? Patient { get; set; }
     public Appointment? Appointment { get; set; }

@@ -12,15 +12,12 @@ namespace DermaCare.UI.ViewModels.Billing;
 public class InvoiceViewModel : BaseViewModel
 {
     private readonly IBillingService _billingService;
-    private readonly IPatientService _patientService;
     private readonly IInventoryService _inventoryService;
     private readonly PdfReportExporter _pdfExporter;
 
-    private List<Patient> _allPatients = new();
     private List<Invoice> _allRecentInvoices = new();
-    private string? _patientSearch;
+    private string? _customerName;
     private string? _billSearch;
-    private Patient? _selectedPatient;
     private ServiceItem? _selectedService;
     private Medicine? _selectedMedicine;
     private int _serviceQuantity = 1;
@@ -39,20 +36,17 @@ public class InvoiceViewModel : BaseViewModel
     private PaymentMethod _paymentMethod = PaymentMethod.Cash;
     private Invoice? _selectedInvoice;
     private string? _statusMessage;
-    private int? _pendingPreselectPatientId;
+    private int? _preselectedPatientId;
 
     public InvoiceViewModel(
         IBillingService billingService,
-        IPatientService patientService,
         IInventoryService inventoryService,
         PdfReportExporter pdfExporter)
     {
         _billingService = billingService;
-        _patientService = patientService;
         _inventoryService = inventoryService;
         _pdfExporter = pdfExporter;
 
-        Patients = new ObservableCollection<Patient>();
         Services = new ObservableCollection<ServiceItem>();
         Medicines = new ObservableCollection<Medicine>();
         LineItems = new ObservableCollection<InvoiceItem>();
@@ -103,21 +97,16 @@ public class InvoiceViewModel : BaseViewModel
         _ = InitializeAsync();
     }
 
-    public ObservableCollection<Patient> Patients { get; }
     public ObservableCollection<ServiceItem> Services { get; }
     public ObservableCollection<Medicine> Medicines { get; }
     public ObservableCollection<InvoiceItem> LineItems { get; }
     public ObservableCollection<Invoice> Invoices { get; }
     public IReadOnlyList<PaymentMethod> PaymentMethods { get; }
 
-    public string? PatientSearch
+    public string? CustomerName
     {
-        get => _patientSearch;
-        set
-        {
-            if (SetProperty(ref _patientSearch, value))
-                FilterPatients();
-        }
+        get => _customerName;
+        set => SetProperty(ref _customerName, value);
     }
 
     public string? BillSearch
@@ -128,12 +117,6 @@ public class InvoiceViewModel : BaseViewModel
             if (SetProperty(ref _billSearch, value))
                 FilterBills();
         }
-    }
-
-    public Patient? SelectedPatient
-    {
-        get => _selectedPatient;
-        set => SetProperty(ref _selectedPatient, value);
     }
 
     public ServiceItem? SelectedService { get => _selectedService; set => SetProperty(ref _selectedService, value); }
@@ -211,24 +194,14 @@ public class InvoiceViewModel : BaseViewModel
     public ICommand ExportPdfCommand { get; }
     public ICommand RefreshCommand { get; }
 
-    public void PreselectPatient(int patientId)
+    public void PreselectCustomer(string? customerName, int? patientId = null)
     {
-        _pendingPreselectPatientId = patientId;
-        var found = Patients.FirstOrDefault(p => p.PatientId == patientId)
-                    ?? _allPatients.FirstOrDefault(p => p.PatientId == patientId);
-        if (found is not null)
-        {
-            if (!Patients.Contains(found)) Patients.Insert(0, found);
-            SelectedPatient = found;
-            _pendingPreselectPatientId = null;
-        }
+        CustomerName = customerName;
+        _preselectedPatientId = patientId;
     }
 
     private async Task InitializeAsync()
     {
-        _allPatients = (await _patientService.SearchAsync(null)).ToList();
-        FilterPatients();
-
         var services = await _billingService.GetActiveServicesAsync();
         Services.Clear();
         foreach (var s in services) Services.Add(s);
@@ -240,27 +213,6 @@ public class InvoiceViewModel : BaseViewModel
         SelectedMedicine = Medicines.FirstOrDefault();
 
         await LoadRecentInvoicesAsync();
-    }
-
-    private void FilterPatients()
-    {
-        var prevId = _pendingPreselectPatientId ?? SelectedPatient?.PatientId;
-        Patients.Clear();
-        var q = PatientSearch?.Trim();
-        var matches = string.IsNullOrWhiteSpace(q)
-            ? _allPatients
-            : _allPatients.Where(p =>
-                p.FullName.Contains(q, StringComparison.OrdinalIgnoreCase) ||
-                p.PatientCode.Contains(q, StringComparison.OrdinalIgnoreCase) ||
-                p.Phone.Contains(q, StringComparison.OrdinalIgnoreCase) ||
-                (!string.IsNullOrWhiteSpace(p.CNIC) && p.CNIC.Contains(q, StringComparison.OrdinalIgnoreCase)));
-
-        foreach (var p in matches)
-            Patients.Add(p);
-
-        SelectedPatient = Patients.FirstOrDefault(p => p.PatientId == prevId) ?? Patients.FirstOrDefault();
-        if (_pendingPreselectPatientId.HasValue && SelectedPatient?.PatientId == _pendingPreselectPatientId.Value)
-            _pendingPreselectPatientId = null;
     }
 
     private async Task LoadRecentInvoicesAsync()
@@ -278,8 +230,7 @@ public class InvoiceViewModel : BaseViewModel
             ? _allRecentInvoices
             : _allRecentInvoices.Where(i =>
                 i.BillNumber.Contains(q, StringComparison.OrdinalIgnoreCase) ||
-                (i.Patient?.FullName?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                (i.Patient?.PatientCode?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false));
+                i.DisplayCustomerName.Contains(q, StringComparison.OrdinalIgnoreCase));
 
         foreach (var inv in matches)
             Invoices.Add(inv);
@@ -372,14 +323,8 @@ public class InvoiceViewModel : BaseViewModel
 
     private async Task CreateInvoiceAsync()
     {
-        if (SelectedPatient is null)
-        {
-            StatusMessage = "Please select a patient.";
-            return;
-        }
-
         var result = await _billingService.CreateInvoiceAsync(
-            SelectedPatient.PatientId,
+            _preselectedPatientId,
             null,
             LineItems.ToList(),
             Notes,
@@ -387,7 +332,8 @@ public class InvoiceViewModel : BaseViewModel
             InitialPaymentMethod,
             DiscountAmount,
             DiscountPercent,
-            DiscountReason);
+            DiscountReason,
+            CustomerName);
 
         if (!result.Success)
         {
@@ -396,6 +342,8 @@ public class InvoiceViewModel : BaseViewModel
         }
 
         LineItems.Clear();
+        CustomerName = string.Empty;
+        _preselectedPatientId = null;
         Notes = string.Empty;
         DiscountAmount = 0m;
         DiscountPercent = 0m;

@@ -55,11 +55,15 @@ public class AppointmentRepository : IAppointmentRepository
             .ToListAsync(ct);
     }
 
-    public async Task<int> GetNextTokenSequenceAsync(DateTime date, CancellationToken ct = default)
+    public async Task<int> GetNextTokenSequenceAsync(DateTime date, bool isWalkIn, CancellationToken ct = default)
     {
         var day = date.Date;
-        var maxSeq = await _context.Appointments
-            .Where(a => a.AppointmentDate.Date == day)
+        var q = _context.Appointments.Where(a => a.AppointmentDate.Date == day);
+        q = isWalkIn
+            ? q.Where(a => a.Type == AppointmentType.WalkIn)
+            : q.Where(a => a.Type != AppointmentType.WalkIn);
+
+        var maxSeq = await q
             .Select(a => (int?)a.TokenSequence)
             .MaxAsync(ct) ?? 0;
         return maxSeq + 1;

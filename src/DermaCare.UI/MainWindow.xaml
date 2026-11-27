@@ -6,7 +6,6 @@
         Height="780" Width="1260"
         WindowStartupLocation="CenterScreen">
     <Window.InputBindings>
-        <KeyBinding Key="F2" Command="{Binding QuickNewPatientCommand}" />
         <KeyBinding Key="F3" Command="{Binding QuickBookAppointmentCommand}" />
     </Window.InputBindings>
 
@@ -52,20 +51,6 @@
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="ViewDashboard" Width="18" Height="18" Margin="0,0,10,0" VerticalAlignment="Center" />
                             <TextBlock Text="Dashboard" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding NavigatePatientsCommand}" Style="{StaticResource MaterialDesignFlatButton}" HorizontalContentAlignment="Left" Margin="0,2">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="AccountGroup" Width="18" Height="18" Margin="0,0,10,0" VerticalAlignment="Center" />
-                            <TextBlock Text="Patients (F2 New)" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding NavigateDoctorsCommand}" Visibility="{Binding CanAccessDoctors, Converter={StaticResource BoolToVis}}" Style="{StaticResource MaterialDesignFlatButton}" HorizontalContentAlignment="Left" Margin="0,2">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Doctor" Width="18" Height="18" Margin="0,0,10,0" VerticalAlignment="Center" />
-                            <TextBlock Text="Doctors" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
 

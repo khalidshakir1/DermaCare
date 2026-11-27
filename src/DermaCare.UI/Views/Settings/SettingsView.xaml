@@ -12,6 +12,7 @@
             <TabItem Header="Clinic Profile">
                 <StackPanel Margin="16" MaxWidth="520">
                     <TextBox Text="{Binding ClinicProfile.ClinicName, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Clinic Name" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,12" />
+                    <TextBox Text="{Binding ClinicProfile.DoctorName, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Clinic Doctor Name" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,12" />
                     <TextBox Text="{Binding ClinicProfile.Address, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Address" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,12" />
                     <TextBox Text="{Binding ClinicProfile.Phone, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Phone" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,12" />
                     <TextBox Text="{Binding ClinicProfile.Email, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Email" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,16" />
@@ -39,29 +40,6 @@
                             <DataGridTextColumn Header="Full Name" Binding="{Binding FullName}" Width="200" />
                             <DataGridTextColumn Header="Role" Binding="{Binding Role.RoleName}" Width="130" />
                             <DataGridCheckBoxColumn Header="Active" Binding="{Binding IsActive}" Width="*" />
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </Grid>
-            </TabItem>
-
-            <TabItem Header="Pending Doctor Approvals">
-                <Grid Margin="16">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
-                        <Button Content="Approve Selected Doctor" Command="{Binding ApproveDoctorCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0" />
-                        <Button Content="Reject" Command="{Binding RejectDoctorCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" />
-                    </StackPanel>
-                    <DataGrid Grid.Row="1" ItemsSource="{Binding PendingDoctors}" SelectedItem="{Binding SelectedPendingDoctor}" AutoGenerateColumns="False" IsReadOnly="True">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Full Name" Binding="{Binding FullName}" Width="180" />
-                            <DataGridTextColumn Header="Username" Binding="{Binding Username}" Width="120" />
-                            <DataGridTextColumn Header="PMDC No." Binding="{Binding DoctorProfile.PMDCNumber}" Width="140" />
-                            <DataGridTextColumn Header="Specialization" Binding="{Binding DoctorProfile.Specialization}" Width="140" />
-                            <DataGridTextColumn Header="Phone" Binding="{Binding DoctorProfile.Phone}" Width="130" />
-                            <DataGridTextColumn Header="Registered" Binding="{Binding CreatedAt, StringFormat=d}" Width="*" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>

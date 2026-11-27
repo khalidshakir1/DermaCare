@@ -28,6 +28,33 @@
                 </DockPanel>
             </materialDesign:Card>
 
+            <!-- NOW SERVING / TOKEN TURN BANNER -->
+            <materialDesign:Card Padding="18" UniformCornerRadius="10" Margin="0,0,0,16" Background="#E3F2FD">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="Walk-In Token (1-Click)"
+                                Command="{Binding IssueWalkInTokenCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Margin="0,0,10,0" />
+                        <Button Content="Call Next Token"
+                                Command="{Binding CallNextTokenCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Background="#1565C0" CornerRadius="8" Padding="16,8" Margin="0,0,16,0">
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="NOW SERVING" Foreground="#BBDEFB" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" />
+                                <TextBlock Text="{Binding CurrentTokenNumber}" Foreground="White" FontSize="26" FontWeight="Bold" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding CurrentTokenPatient}" Foreground="#0D47A1" Style="{StaticResource MaterialDesignHeadline6TextBlock}" />
+                            <TextBlock Text="{Binding NextWaitingText}" Foreground="#1565C0" Style="{StaticResource MaterialDesignBody2TextBlock}" Margin="0,2,0,0" />
+                        </StackPanel>
+                    </StackPanel>
+                </DockPanel>
+            </materialDesign:Card>
+
             <!-- ADMIN / DOCTOR KPI CARDS -->
             <WrapPanel Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}" Margin="0,0,0,12">
                 <materialDesign:Card Padding="18" Width="210" UniformCornerRadius="10" Margin="0,0,14,14">
@@ -92,7 +119,8 @@
                 </WrapPanel>
 
                 <StackPanel Orientation="Horizontal" Margin="0,4,0,16">
-                    <Button Content="Issue New Token / Appointment" Command="{Binding OpenBookTokenCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,10,0" />
+                    <Button Content="Walk-In Token (1-Click)" Command="{Binding IssueWalkInTokenCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,10,0" />
+                    <Button Content="Book Appointment (P-Token)" Command="{Binding OpenBookTokenCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,10,0" />
                     <Button Content="Open POS / Billing" Command="{Binding OpenPosCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,10,0" />
                     <Button Content="View Inventory (Read-Only)" Command="{Binding OpenInventoryCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" />
                 </StackPanel>
@@ -113,10 +141,11 @@
                         <DataGrid ItemsSource="{Binding TodaysQueue}" AutoGenerateColumns="False" IsReadOnly="True" MaxHeight="300">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Token" Binding="{Binding TokenNumber}" Width="75" FontWeight="Bold" />
-                                <DataGridTextColumn Header="Time" Binding="{Binding AppointmentTime}" Width="75" />
-                                <DataGridTextColumn Header="Patient" Binding="{Binding Patient.FullName}" Width="*" />
-                                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100" />
-                                <DataGridTemplateColumn Header="Actions" Width="155">
+                                <DataGridTextColumn Header="Time" Binding="{Binding AppointmentTime, StringFormat='hh\\:mm'}" Width="65" />
+                                <DataGridTextColumn Header="Patient" Binding="{Binding DisplayPatientName}" Width="*" />
+                                <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="90" />
+                                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90" />
+                                <DataGridTemplateColumn Header="Actions" Width="195">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal">
@@ -127,6 +156,11 @@
                                                         Padding="6,2" />
                                                 <Button Content="Done"
                                                         Command="{Binding DataContext.CompleteTokenCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource MaterialDesignFlatButton}"
+                                                        Padding="6,2" />
+                                                <Button Content="Print"
+                                                        Command="{Binding DataContext.PrintTokenCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                         CommandParameter="{Binding}"
                                                         Style="{StaticResource MaterialDesignFlatButton}"
                                                         Padding="6,2" />

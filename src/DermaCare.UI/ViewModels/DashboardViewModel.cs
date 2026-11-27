@@ -16,6 +16,7 @@ public class DashboardViewModel : BaseViewModel
     private readonly ICurrentSession _session;
     private readonly IAppointmentRepository _appointmentRepository;
     private readonly IAppointmentService _appointmentService;
+    private readonly IDoctorService _doctorService;
     private readonly IInventoryService _inventoryService;
     private readonly IBillingService _billingService;
     private readonly IReportService _reportService;
@@ -29,11 +30,14 @@ public class DashboardViewModel : BaseViewModel
     private decimal _myTodaysRevenue;
     private int _myTodaysBillCount;
     private int _pendingQueueCount;
+    private Appointment? _currentToken;
+    private Appointment? _nextWaitingToken;
 
     public DashboardViewModel(
         ICurrentSession session,
         IAppointmentRepository appointmentRepository,
         IAppointmentService appointmentService,
+        IDoctorService doctorService,
         IInventoryService inventoryService,
         IBillingService billingService,
         IReportService reportService,
@@ -42,6 +46,7 @@ public class DashboardViewModel : BaseViewModel
         _session = session;
         _appointmentRepository = appointmentRepository;
         _appointmentService = appointmentService;
+        _doctorService = doctorService;
         _inventoryService = inventoryService;
         _billingService = billingService;
         _reportService = reportService;
@@ -54,8 +59,18 @@ public class DashboardViewModel : BaseViewModel
         OpenSaleSummaryCommand = new RelayCommand(() => _navigationService.NavigateTo<SaleSummaryViewModel>());
         OpenPosCommand = new RelayCommand(() => _navigationService.NavigateTo<InvoiceViewModel>());
         OpenBookTokenCommand = new RelayCommand(() =>
-            _navigationService.NavigateTo<AppointmentFormViewModel>(vm => _ = vm.InitializeAsync(true, DateTime.Today)));
+            _navigationService.NavigateTo<AppointmentFormViewModel>(vm => _ = vm.InitializeAsync(false, DateTime.Today)));
+        IssueWalkInTokenCommand = new RelayCommand(async () => await IssueWalkInTokenAsync());
+        CallNextTokenCommand = new RelayCommand(async () => await CallNextTokenAsync());
         OpenInventoryCommand = new RelayCommand(() => _navigationService.NavigateTo<InventoryViewModel>());
+        PrintTokenCommand = new RelayCommand(async p =>
+        {
+            if (p is Appointment appt)
+            {
+                var clinic = await _billingService.GetClinicProfileAsync();
+                ReceiptPrintHelper.PrintThermalToken(appt, clinic);
+            }
+        });
         CallTokenCommand = new RelayCommand(async p =>
         {
             if (p is Appointment appt)
@@ -99,13 +114,57 @@ public class DashboardViewModel : BaseViewModel
     public int MyTodaysBillCount { get => _myTodaysBillCount; private set => SetProperty(ref _myTodaysBillCount, value); }
     public int PendingQueueCount { get => _pendingQueueCount; private set => SetProperty(ref _pendingQueueCount, value); }
 
+    public string CurrentTokenNumber => _currentToken?.TokenNumber ?? "---";
+    public string CurrentTokenPatient => _currentToken is not null
+        ? $"{_currentToken.DisplayPatientName} ({_currentToken.Type})"
+        : "No patient currently in room";
+    public string NextWaitingText => _nextWaitingToken is not null
+        ? $"Next Waiting: {_nextWaitingToken.TokenNumber} — {_nextWaitingToken.DisplayPatientName}"
+        : "No waiting tokens in queue";
+
     public ICommand RefreshCommand { get; }
     public ICommand OpenSaleSummaryCommand { get; }
     public ICommand OpenPosCommand { get; }
     public ICommand OpenBookTokenCommand { get; }
+    public ICommand IssueWalkInTokenCommand { get; }
+    public ICommand CallNextTokenCommand { get; }
     public ICommand OpenInventoryCommand { get; }
+    public ICommand PrintTokenCommand { get; }
     public ICommand CallTokenCommand { get; }
     public ICommand CompleteTokenCommand { get; }
+
+    private async Task IssueWalkInTokenAsync()
+    {
+        var docs = await _doctorService.GetAllActiveAsync();
+        var doc = docs.FirstOrDefault();
+        var walkIn = new Appointment
+        {
+            DoctorId = doc?.DoctorId ?? 0,
+            AppointmentDate = DateTime.Today,
+            AppointmentTime = DateTime.Now.TimeOfDay,
+            Type = AppointmentType.WalkIn
+        };
+
+        var result = await _appointmentService.BookAsync(walkIn);
+        if (result.Success && result.Data is not null)
+        {
+            result.Data.Doctor = doc;
+            var clinic = await _billingService.GetClinicProfileAsync();
+            ReceiptPrintHelper.PrintThermalToken(result.Data, clinic);
+            await LoadSummaryAsync();
+        }
+    }
+
+    private async Task CallNextTokenAsync()
+    {
+        if (_currentToken is not null)
+            await _appointmentService.UpdateStatusAsync(_currentToken.AppointmentId, AppointmentStatus.Completed);
+
+        if (_nextWaitingToken is not null)
+            await _appointmentService.UpdateStatusAsync(_nextWaitingToken.AppointmentId, AppointmentStatus.InProgress);
+
+        await LoadSummaryAsync();
+    }
 
     private async Task LoadSummaryAsync()
     {
@@ -116,6 +175,12 @@ public class DashboardViewModel : BaseViewModel
         TodaysQueue.Clear();
         foreach (var a in today.Where(a => a.Status != AppointmentStatus.Cancelled))
             TodaysQueue.Add(a);
+
+        _currentToken = TodaysQueue.FirstOrDefault(a => a.Status == AppointmentStatus.InProgress);
+        _nextWaitingToken = TodaysQueue.FirstOrDefault(a => a.Status is AppointmentStatus.Scheduled or AppointmentStatus.Confirmed);
+        OnPropertyChanged(nameof(CurrentTokenNumber));
+        OnPropertyChanged(nameof(CurrentTokenPatient));
+        OnPropertyChanged(nameof(NextWaitingText));
 
         var lowStock = await _inventoryService.GetLowStockMedicinesAsync();
         LowStockCount = lowStock.Count;

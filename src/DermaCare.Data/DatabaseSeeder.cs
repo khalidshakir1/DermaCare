@@ -45,11 +45,28 @@ public static class DatabaseSeeder
             await context.SaveChangesAsync(ct);
         }
 
+        if (!await context.Doctors.AnyAsync(ct))
+        {
+            var adminUser = await context.Users.FirstOrDefaultAsync(u => u.Username == "admin", ct)
+                            ?? await context.Users.FirstOrDefaultAsync(ct);
+            if (adminUser is not null)
+            {
+                context.Doctors.Add(new Doctor
+                {
+                    UserId = adminUser.UserId,
+                    Specialization = "Dermatology",
+                    IsActive = true
+                });
+                await context.SaveChangesAsync(ct);
+            }
+        }
+
         if (!await context.ClinicProfiles.AnyAsync(ct))
         {
             context.ClinicProfiles.Add(new ClinicProfile
             {
                 ClinicName = "DermaCare Dermatology Clinic",
+                DoctorName = "Dr. Attending Dermatologist",
                 Address = "Gulberg III, Lahore, Pakistan",
                 Phone = "+92-42-3571-2000",
                 Email = "contact@dermacare.pk"

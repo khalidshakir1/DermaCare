@@ -23,24 +23,11 @@
                                    VerticalAlignment="Center" />
                     </DockPanel>
 
-                    <!-- Patient Selection -->
-                    <Grid Margin="0,0,0,10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="180" />
-                            <ColumnDefinition Width="8" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBox Grid.Column="0"
-                                 Text="{Binding PatientSearch, UpdateSourceTrigger=PropertyChanged}"
-                                 materialDesign:HintAssist.Hint="Name / Code / CNIC..."
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" />
-                        <ComboBox Grid.Column="2"
-                                  ItemsSource="{Binding Patients}"
-                                  SelectedItem="{Binding SelectedPatient}"
-                                  DisplayMemberPath="FullName"
-                                  materialDesign:HintAssist.Hint="Select Patient"
-                                  Style="{StaticResource MaterialDesignOutlinedComboBox}" />
-                    </Grid>
+                    <!-- Customer Name (Optional — no patient info required) -->
+                    <TextBox Text="{Binding CustomerName, UpdateSourceTrigger=PropertyChanged}"
+                             materialDesign:HintAssist.Hint="Customer / Patient Name (Optional — leave blank for walk-in)"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             Margin="0,0,0,10" />
 
                     <!-- Item Entry Tabs -->
                     <TabControl Margin="0,0,0,10">
@@ -247,7 +234,7 @@
                           Margin="0,0,0,12">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Bill #" Binding="{Binding BillNumber}" Width="95" />
-                        <DataGridTextColumn Header="Patient" Binding="{Binding Patient.FullName}" Width="*" />
+                        <DataGridTextColumn Header="Customer" Binding="{Binding DisplayCustomerName}" Width="*" />
                         <DataGridTextColumn Header="Date" Binding="{Binding IssuedAt, StringFormat='dd/MM/yyyy'}" Width="85" />
                         <DataGridTextColumn Header="Total" Binding="{Binding TotalAmount, StringFormat='Rs. {0:N0}'}" Width="80" />
                         <DataGridTextColumn Header="Paid" Binding="{Binding PaidAmount, StringFormat='Rs. {0:N0}'}" Width="80" />

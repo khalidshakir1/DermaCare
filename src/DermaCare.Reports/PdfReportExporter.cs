@@ -83,7 +83,8 @@ public class PdfReportExporter
         title.Format.Font.Bold = true;
         title.Format.SpaceAfter = 6;
 
-        section.AddParagraph($"Patient: {invoice.Patient?.FullName} ({invoice.Patient?.PatientCode})");
+        var custCode = string.IsNullOrWhiteSpace(invoice.Patient?.PatientCode) ? string.Empty : $" ({invoice.Patient.PatientCode})";
+        section.AddParagraph($"Patient: {invoice.DisplayCustomerName}{custCode}");
         section.AddParagraph($"Date: {invoice.IssuedAt.ToLocalTime():dd/MM/yyyy HH:mm} | Status: {invoice.Status}");
         if (!string.IsNullOrWhiteSpace(invoice.Notes))
             section.AddParagraph($"Notes: {invoice.Notes}");

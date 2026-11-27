@@ -16,6 +16,7 @@ public class ClinicProfile
 {
     public int ClinicProfileId { get; set; }
     public string ClinicName { get; set; } = "DermaCare Dermatology Clinic";
+    public string DoctorName { get; set; } = "Dr. Attending Dermatologist";
     public string Address { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
     public string? Email { get; set; }

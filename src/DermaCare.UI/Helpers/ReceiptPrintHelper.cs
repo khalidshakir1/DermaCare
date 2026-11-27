@@ -46,7 +46,7 @@ public static class ReceiptPrintHelper
         var billNo = string.IsNullOrWhiteSpace(invoice.BillNumber) ? $"#{invoice.InvoiceId}" : invoice.BillNumber;
         AddLine($"Bill # : {billNo}", bold: true);
         AddLine($"Date   : {invoice.IssuedAt.ToLocalTime():dd/MM/yyyy HH:mm}");
-        AddLine($"Patient: {invoice.Patient?.FullName}");
+        AddLine($"Patient: {invoice.DisplayCustomerName}");
         if (!string.IsNullOrWhiteSpace(invoice.Patient?.PatientCode))
             AddLine($"Code   : {invoice.Patient.PatientCode}");
         AddLine($"Status : {invoice.Status}");
@@ -132,10 +132,13 @@ public static class ReceiptPrintHelper
         AddLine($"TOKEN: {tokenText}", bold: true, align: TextAlignment.Center, size: 22);
         AddLine("================================", align: TextAlignment.Center);
 
-        AddLine($"Patient : {appointment.Patient?.FullName}", bold: true);
-        if (!string.IsNullOrWhiteSpace(appointment.Patient?.PatientCode))
-            AddLine($"Code    : {appointment.Patient.PatientCode}");
-        AddLine($"Doctor  : {appointment.Doctor?.User?.FullName ?? "Attending Doctor"}");
+        AddLine($"Patient : {appointment.DisplayPatientName}", bold: true);
+        if (!string.IsNullOrWhiteSpace(appointment.DisplayPatientPhone))
+            AddLine($"Phone   : {appointment.DisplayPatientPhone}");
+        var docName = !string.IsNullOrWhiteSpace(clinic.DoctorName)
+            ? clinic.DoctorName
+            : (appointment.Doctor?.User?.FullName ?? "Attending Doctor");
+        AddLine($"Doctor  : {docName}");
         AddLine($"Type    : {appointment.Type}");
         AddLine($"Date    : {appointment.AppointmentDate:dd/MM/yyyy}");
         AddLine($"Time    : {appointment.AppointmentTime:hh\\:mm}");

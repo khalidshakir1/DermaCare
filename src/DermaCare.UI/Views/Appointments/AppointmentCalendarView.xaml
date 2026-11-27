@@ -14,29 +14,22 @@
 
                 <DockPanel Grid.Row="0" Margin="0,0,0,14">
                     <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
-                        <DatePicker Width="150"
+                        <DatePicker Width="160"
                                     SelectedDate="{Binding SelectedDate}"
                                     materialDesign:HintAssist.Hint="Date"
                                     Style="{StaticResource MaterialDesignOutlinedDatePicker}"
                                     Margin="0,0,10,0" />
-                        <ComboBox Width="210"
-                                  ItemsSource="{Binding Doctors}"
-                                  SelectedItem="{Binding SelectedDoctorFilter}"
-                                  DisplayMemberPath="User.FullName"
-                                  materialDesign:HintAssist.Hint="Filter by Doctor"
-                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                  Margin="0,0,10,0" />
                         <Button Content="Refresh"
                                 Command="{Binding RefreshCommand}"
                                 Style="{StaticResource MaterialDesignOutlinedButton}" />
                     </StackPanel>
 
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Content="Walk-In Token"
+                        <Button Content="Walk-In Token (1-Click)"
                                 Command="{Binding WalkInCommand}"
                                 Style="{StaticResource MaterialDesignOutlinedButton}"
                                 Margin="0,0,8,0" />
-                        <Button Content="Book Appointment"
+                        <Button Content="Book Appointment (P-Token)"
                                 Command="{Binding NewAppointmentCommand}"
                                 Style="{StaticResource MaterialDesignRaisedButton}" />
                     </StackPanel>
@@ -51,9 +44,9 @@
                           CanUserAddRows="False">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Token #" Binding="{Binding TokenNumber}" Width="85" FontWeight="Bold" />
-                        <DataGridTextColumn Header="Time" Binding="{Binding AppointmentTime}" Width="85" />
-                        <DataGridTextColumn Header="Patient" Binding="{Binding Patient.FullName}" Width="180" />
-                        <DataGridTextColumn Header="Doctor" Binding="{Binding Doctor.User.FullName}" Width="170" />
+                        <DataGridTextColumn Header="Time" Binding="{Binding AppointmentTime, StringFormat='hh\\:mm'}" Width="80" />
+                        <DataGridTextColumn Header="Patient" Binding="{Binding DisplayPatientName}" Width="190" />
+                        <DataGridTextColumn Header="Phone" Binding="{Binding DisplayPatientPhone}" Width="130" />
                         <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="110" />
                         <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="110" />
                         <DataGridTextColumn Header="Notes" Binding="{Binding Notes}" Width="*" />
@@ -112,9 +105,9 @@
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Date" Binding="{Binding AppointmentDate, StringFormat='dd/MM/yyyy'}" Width="105" />
                         <DataGridTextColumn Header="Token #" Binding="{Binding TokenNumber}" Width="85" FontWeight="Bold" />
-                        <DataGridTextColumn Header="Time" Binding="{Binding AppointmentTime}" Width="80" />
-                        <DataGridTextColumn Header="Patient" Binding="{Binding Patient.FullName}" Width="190" />
-                        <DataGridTextColumn Header="Doctor" Binding="{Binding Doctor.User.FullName}" Width="180" />
+                        <DataGridTextColumn Header="Time" Binding="{Binding AppointmentTime, StringFormat='hh\\:mm'}" Width="80" />
+                        <DataGridTextColumn Header="Patient" Binding="{Binding DisplayPatientName}" Width="210" />
+                        <DataGridTextColumn Header="Phone" Binding="{Binding DisplayPatientPhone}" Width="140" />
                         <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="110" />
                         <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*" />
                     </DataGrid.Columns>

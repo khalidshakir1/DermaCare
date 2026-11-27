@@ -39,7 +39,7 @@ public class ExcelReportExporter
             var a = summary.Appointments[i];
             appts.Cells[r, 1].Value = a.AppointmentDate.ToString("dd/MM/yyyy");
             appts.Cells[r, 2].Value = a.AppointmentTime.ToString();
-            appts.Cells[r, 3].Value = a.Patient?.FullName ?? string.Empty;
+            appts.Cells[r, 3].Value = a.DisplayPatientName;
             appts.Cells[r, 4].Value = a.Doctor?.User?.FullName ?? string.Empty;
             appts.Cells[r, 5].Value = a.Status.ToString();
         }

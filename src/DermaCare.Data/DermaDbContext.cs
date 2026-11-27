@@ -90,7 +90,11 @@ public class DermaDbContext : DbContext
         {
             e.HasKey(x => x.AppointmentId);
             e.Property(x => x.TokenNumber).HasMaxLength(20);
-            e.HasOne(x => x.Patient).WithMany(p => p.Appointments).HasForeignKey(x => x.PatientId).OnDelete(DeleteBehavior.Restrict);
+            e.Property(x => x.PatientName).HasMaxLength(120);
+            e.Property(x => x.PatientPhone).HasMaxLength(30);
+            e.Ignore(x => x.DisplayPatientName);
+            e.Ignore(x => x.DisplayPatientPhone);
+            e.HasOne(x => x.Patient).WithMany(p => p.Appointments).HasForeignKey(x => x.PatientId).IsRequired(false).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(x => x.Doctor).WithMany(d => d.Appointments).HasForeignKey(x => x.DoctorId).OnDelete(DeleteBehavior.Restrict);
         });
 
@@ -125,6 +129,7 @@ public class DermaDbContext : DbContext
         {
             e.HasKey(x => x.InvoiceId);
             e.Property(x => x.BillNumber).HasMaxLength(30).IsRequired();
+            e.Property(x => x.CustomerName).HasMaxLength(120);
             e.Property(x => x.DiscountReason).HasMaxLength(150);
             e.Property(x => x.Notes).HasMaxLength(300);
             e.Property(x => x.Subtotal).HasPrecision(18, 2);
@@ -133,8 +138,9 @@ public class DermaDbContext : DbContext
             e.Property(x => x.TotalAmount).HasPrecision(18, 2);
             e.Property(x => x.PaidAmount).HasPrecision(18, 2);
             e.Ignore(x => x.BalanceDue);
+            e.Ignore(x => x.DisplayCustomerName);
             e.Ignore(x => x.CollectedByUser);
-            e.HasOne(x => x.Patient).WithMany(p => p.Invoices).HasForeignKey(x => x.PatientId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Patient).WithMany(p => p.Invoices).HasForeignKey(x => x.PatientId).IsRequired(false).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(x => x.Appointment).WithOne(a => a.Invoice).HasForeignKey<Invoice>(x => x.AppointmentId).OnDelete(DeleteBehavior.Restrict);
         });
 
@@ -167,6 +173,7 @@ public class DermaDbContext : DbContext
         {
             e.HasKey(x => x.ClinicProfileId);
             e.Property(x => x.ClinicName).HasMaxLength(150).IsRequired();
+            e.Property(x => x.DoctorName).HasMaxLength(120);
         });
 
         modelBuilder.Entity<Medicine>(e =>

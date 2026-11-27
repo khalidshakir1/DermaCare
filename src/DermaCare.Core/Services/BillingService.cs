@@ -44,7 +44,7 @@ public class BillingService : IBillingService
         _billingRepository.GetClinicProfileAsync(ct);
 
     public async Task<ServiceResult<Invoice>> CreateInvoiceAsync(
-        int patientId,
+        int? patientId,
         int? appointmentId,
         IEnumerable<InvoiceItem> items,
         string? notes = null,
@@ -53,11 +53,9 @@ public class BillingService : IBillingService
         decimal discountAmount = 0m,
         decimal discountPercent = 0m,
         string? discountReason = null,
+        string? customerName = null,
         CancellationToken ct = default)
     {
-        if (patientId <= 0)
-            return new ServiceResult<Invoice>(false, ErrorMessage: "Please select a patient.");
-
         var itemList = items.Where(i => i.Quantity > 0 && i.UnitPrice >= 0).ToList();
         if (itemList.Count == 0)
             return new ServiceResult<Invoice>(false, ErrorMessage: "Add at least one bill item.");
@@ -100,7 +98,8 @@ public class BillingService : IBillingService
         var invoice = new Invoice
         {
             BillNumber = billNumber,
-            PatientId = patientId,
+            PatientId = patientId is > 0 ? patientId : null,
+            CustomerName = string.IsNullOrWhiteSpace(customerName) ? null : customerName.Trim(),
             AppointmentId = appointmentId,
             Subtotal = subtotal,
             DiscountAmount = computedDiscount,

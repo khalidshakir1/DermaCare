@@ -84,7 +84,7 @@
                 <DataGrid ItemsSource="{Binding Invoices}" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,8,0,0">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Bill #" Binding="{Binding BillNumber}" Width="100" />
-                        <DataGridTextColumn Header="Patient" Binding="{Binding Patient.FullName}" Width="180" />
+                        <DataGridTextColumn Header="Customer" Binding="{Binding DisplayCustomerName}" Width="180" />
                         <DataGridTextColumn Header="Subtotal" Binding="{Binding Subtotal, StringFormat='Rs. {0:N0}'}" Width="100" />
                         <DataGridTextColumn Header="Discount" Binding="{Binding DiscountAmount, StringFormat='Rs. {0:N0}'}" Width="100" />
                         <DataGridTextColumn Header="Discount Note" Binding="{Binding DiscountReason}" Width="140" />
