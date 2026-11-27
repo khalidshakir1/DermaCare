@@ -22,7 +22,6 @@ public class AppointmentFormViewModel : BaseViewModel
     private string _appointmentTime = "09:00";
     private AppointmentType _type = AppointmentType.Consultation;
     private string? _notes;
-    private bool _printTokenOnSave = true;
     private string? _errorMessage;
 
     public AppointmentFormViewModel(
@@ -55,7 +54,6 @@ public class AppointmentFormViewModel : BaseViewModel
     public string AppointmentTime { get => _appointmentTime; set => SetProperty(ref _appointmentTime, value); }
     public AppointmentType Type { get => _type; set => SetProperty(ref _type, value); }
     public string? Notes { get => _notes; set => SetProperty(ref _notes, value); }
-    public bool PrintTokenOnSave { get => _printTokenOnSave; set => SetProperty(ref _printTokenOnSave, value); }
 
     public string? ErrorMessage
     {
@@ -136,13 +134,6 @@ public class AppointmentFormViewModel : BaseViewModel
         {
             ErrorMessage = result.ErrorMessage;
             return;
-        }
-
-        if (PrintTokenOnSave && result.Data is not null)
-        {
-            result.Data.Doctor = _clinicDoctor;
-            var clinic = await _billingService.GetClinicProfileAsync();
-            ReceiptPrintHelper.PrintThermalToken(result.Data, clinic);
         }
 
         _navigationService.NavigateTo<AppointmentCalendarViewModel>();

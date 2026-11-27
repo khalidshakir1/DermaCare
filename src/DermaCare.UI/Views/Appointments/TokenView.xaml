@@ -1,0 +1,156 @@
+<UserControl x:Class="DermaCare.UI.Views.Appointments.TokenView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+    <TabControl Margin="16">
+        <!-- Tab 1: Issue Token & Today's Issued Tokens -->
+        <TabItem Header="Issue Token">
+            <Grid Margin="12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- Token Type Selection Card -->
+                <materialDesign:Card Grid.Row="0" Padding="18" UniformCornerRadius="8" Margin="0,0,0,14">
+                    <StackPanel>
+                        <DockPanel Margin="0,0,0,12">
+                            <Button DockPanel.Dock="Right"
+                                    Content="Refresh"
+                                    Command="{Binding RefreshCommand}"
+                                    Style="{StaticResource MaterialDesignFlatButton}" />
+                            <TextBlock Text="Select Token Type"
+                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                       VerticalAlignment="Center" />
+                        </DockPanel>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                            <RadioButton Content="Walk-In Patient (W-Token, Zero Info)"
+                                         IsChecked="{Binding IsWalkInMode}"
+                                         FontWeight="SemiBold"
+                                         Margin="0,0,24,0" />
+                            <RadioButton Content="Booked Appointment Patient (P-Token)"
+                                         IsChecked="{Binding IsAppointmentMode}"
+                                         FontWeight="SemiBold" />
+                        </StackPanel>
+
+                        <!-- Walk-In Panel -->
+                        <StackPanel Visibility="{Binding IsWalkInMode, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="No patient details required. Click below to issue the next W-series token and print the 80mm slip."
+                                       Opacity="0.75"
+                                       Margin="0,0,0,12" />
+                            <Button Content="Issue &amp; Print Walk-In Token (W)"
+                                    Command="{Binding IssueWalkInTokenCommand}"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    HorizontalAlignment="Left" />
+                        </StackPanel>
+
+                        <!-- Booked Appointment Panel -->
+                        <StackPanel Visibility="{Binding IsAppointmentMode, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="Select a booked appointment from today's list to issue their arrival P-series token:"
+                                       Opacity="0.75"
+                                       Margin="0,0,0,10" />
+                            <DataGrid ItemsSource="{Binding PendingAppointments}"
+                                      SelectedItem="{Binding SelectedBookedAppointment}"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      SelectionMode="Single"
+                                      MaxHeight="170"
+                                      Margin="0,0,0,12">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Time" Binding="{Binding AppointmentTime, StringFormat='hh\\:mm'}" Width="75" />
+                                    <DataGridTextColumn Header="Patient Name" Binding="{Binding DisplayPatientName}" Width="200" FontWeight="SemiBold" />
+                                    <DataGridTextColumn Header="Phone" Binding="{Binding DisplayPatientPhone}" Width="140" />
+                                    <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="110" />
+                                    <DataGridTextColumn Header="Notes / Service" Binding="{Binding Notes}" Width="*" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            <Button Content="Issue &amp; Print Appointment Token (P)"
+                                    Command="{Binding IssueAppointmentTokenCommand}"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    HorizontalAlignment="Left" />
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding StatusMessage}"
+                                   FontWeight="SemiBold"
+                                   Foreground="#00796B"
+                                   Margin="0,10,0,0" />
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <TextBlock Grid.Row="1"
+                           Text="Today's Issued Tokens"
+                           Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                           Margin="0,0,0,8" />
+
+                <DataGrid Grid.Row="2"
+                          ItemsSource="{Binding TodaysTokens}"
+                          SelectedItem="{Binding SelectedIssuedToken}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          SelectionMode="Single">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Token #" Binding="{Binding TokenNumber}" Width="90" FontWeight="Bold" />
+                        <DataGridTextColumn Header="Time" Binding="{Binding AppointmentTime, StringFormat='hh\\:mm'}" Width="80" />
+                        <DataGridTextColumn Header="Patient" Binding="{Binding DisplayPatientName}" Width="210" />
+                        <DataGridTextColumn Header="Phone" Binding="{Binding DisplayPatientPhone}" Width="140" />
+                        <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="110" />
+                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,12,0,0">
+                    <Button Content="Reprint Selected Token (80mm)"
+                            Command="{Binding ReprintTokenCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}" />
+                </StackPanel>
+            </Grid>
+        </TabItem>
+
+        <!-- Tab 2: Token History -->
+        <TabItem Header="Token History">
+            <Grid Margin="12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
+                    <DatePicker Width="145" SelectedDate="{Binding HistoryFromDate}" materialDesign:HintAssist.Hint="From" Style="{StaticResource MaterialDesignOutlinedDatePicker}" Margin="0,0,8,0" />
+                    <DatePicker Width="145" SelectedDate="{Binding HistoryToDate}" materialDesign:HintAssist.Hint="To" Style="{StaticResource MaterialDesignOutlinedDatePicker}" Margin="0,0,8,0" />
+                    <Button Content="Load History" Command="{Binding FilterTokenHistoryCommand}" Style="{StaticResource MaterialDesignRaisedButton}" />
+                </StackPanel>
+
+                <WrapPanel Grid.Row="1" Margin="0,0,0,12">
+                    <materialDesign:Card Padding="14" Width="200" Margin="0,0,12,0" UniformCornerRadius="8">
+                        <StackPanel>
+                            <TextBlock Text="Total Tokens Issued" Opacity="0.7" />
+                            <TextBlock Text="{Binding TotalTokensIssued}" Style="{StaticResource MaterialDesignHeadline5TextBlock}" />
+                        </StackPanel>
+                    </materialDesign:Card>
+                    <materialDesign:Card Padding="14" Width="220" UniformCornerRadius="8">
+                        <StackPanel>
+                            <TextBlock Text="Patients Facilitated" Opacity="0.7" />
+                            <TextBlock Text="{Binding CompletedTokensCount}" Foreground="#00796B" Style="{StaticResource MaterialDesignHeadline5TextBlock}" />
+                        </StackPanel>
+                    </materialDesign:Card>
+                </WrapPanel>
+
+                <DataGrid Grid.Row="2" ItemsSource="{Binding TokenHistory}" AutoGenerateColumns="False" IsReadOnly="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Date" Binding="{Binding AppointmentDate, StringFormat='dd/MM/yyyy'}" Width="105" />
+                        <DataGridTextColumn Header="Token #" Binding="{Binding TokenNumber}" Width="85" FontWeight="Bold" />
+                        <DataGridTextColumn Header="Time" Binding="{Binding AppointmentTime, StringFormat='hh\\:mm'}" Width="80" />
+                        <DataGridTextColumn Header="Patient" Binding="{Binding DisplayPatientName}" Width="210" />
+                        <DataGridTextColumn Header="Phone" Binding="{Binding DisplayPatientPhone}" Width="140" />
+                        <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="110" />
+                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </TabItem>
+    </TabControl>
+</UserControl>

@@ -58,6 +58,9 @@
             <DataTemplate DataType="{x:Type apptVm:AppointmentFormViewModel}">
                 <apptViews:AppointmentFormView />
             </DataTemplate>
+            <DataTemplate DataType="{x:Type apptVm:TokenViewModel}">
+                <apptViews:TokenView />
+            </DataTemplate>
             <DataTemplate DataType="{x:Type emrVm:ConsultationViewModel}">
                 <emrViews:ConsultationView />
             </DataTemplate>

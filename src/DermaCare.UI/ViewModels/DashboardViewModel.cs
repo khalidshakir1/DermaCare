@@ -169,12 +169,13 @@ public class DashboardViewModel : BaseViewModel
     private async Task LoadSummaryAsync()
     {
         var today = await _appointmentRepository.GetByDateAsync(DateTime.Today);
-        TodaysAppointmentCount = today.Count;
-        PendingQueueCount = today.Count(a => a.Status is AppointmentStatus.Scheduled or AppointmentStatus.Confirmed or AppointmentStatus.InProgress);
 
         TodaysQueue.Clear();
-        foreach (var a in today.Where(a => a.Status != AppointmentStatus.Cancelled))
+        foreach (var a in today.Where(a => !string.IsNullOrWhiteSpace(a.TokenNumber) && a.Status != AppointmentStatus.Cancelled))
             TodaysQueue.Add(a);
+
+        TodaysAppointmentCount = TodaysQueue.Count;
+        PendingQueueCount = TodaysQueue.Count(a => a.Status is AppointmentStatus.Scheduled or AppointmentStatus.Confirmed or AppointmentStatus.InProgress);
 
         _currentToken = TodaysQueue.FirstOrDefault(a => a.Status == AppointmentStatus.InProgress);
         _nextWaitingToken = TodaysQueue.FirstOrDefault(a => a.Status is AppointmentStatus.Scheduled or AppointmentStatus.Confirmed);

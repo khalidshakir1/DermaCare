@@ -49,6 +49,7 @@ public class AppointmentRepository : IAppointmentRepository
         }
 
         return await q
+            .Where(a => !string.IsNullOrEmpty(a.TokenNumber))
             .OrderByDescending(a => a.AppointmentDate)
             .ThenByDescending(a => a.TokenSequence)
             .Take(500)

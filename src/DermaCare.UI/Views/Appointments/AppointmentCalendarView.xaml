@@ -2,117 +2,63 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
-    <TabControl Margin="16">
-        <!-- Tab 1: Daily Appointments & Token Queue -->
-        <TabItem Header="Appointments &amp; Live Queue">
-            <Grid Margin="12">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
 
-                <DockPanel Grid.Row="0" Margin="0,0,0,14">
-                    <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
-                        <DatePicker Width="160"
-                                    SelectedDate="{Binding SelectedDate}"
-                                    materialDesign:HintAssist.Hint="Date"
-                                    Style="{StaticResource MaterialDesignOutlinedDatePicker}"
-                                    Margin="0,0,10,0" />
-                        <Button Content="Refresh"
-                                Command="{Binding RefreshCommand}"
-                                Style="{StaticResource MaterialDesignOutlinedButton}" />
-                    </StackPanel>
+        <DockPanel Grid.Row="0" Margin="0,0,0,14">
+            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                <DatePicker Width="160"
+                            SelectedDate="{Binding SelectedDate}"
+                            materialDesign:HintAssist.Hint="Date"
+                            Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                            Margin="0,0,10,0" />
+                <Button Content="Refresh"
+                        Command="{Binding RefreshCommand}"
+                        Style="{StaticResource MaterialDesignOutlinedButton}" />
+            </StackPanel>
 
-                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Content="Walk-In Token (1-Click)"
-                                Command="{Binding WalkInCommand}"
-                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                Margin="0,0,8,0" />
-                        <Button Content="Book Appointment (P-Token)"
-                                Command="{Binding NewAppointmentCommand}"
-                                Style="{StaticResource MaterialDesignRaisedButton}" />
-                    </StackPanel>
-                </DockPanel>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Book Appointment"
+                        Command="{Binding NewAppointmentCommand}"
+                        Style="{StaticResource MaterialDesignRaisedButton}" />
+            </StackPanel>
+        </DockPanel>
 
-                <DataGrid Grid.Row="1"
-                          ItemsSource="{Binding Appointments}"
-                          SelectedItem="{Binding SelectedAppointment}"
-                          AutoGenerateColumns="False"
-                          IsReadOnly="True"
-                          SelectionMode="Single"
-                          CanUserAddRows="False">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Token #" Binding="{Binding TokenNumber}" Width="85" FontWeight="Bold" />
-                        <DataGridTextColumn Header="Time" Binding="{Binding AppointmentTime, StringFormat='hh\\:mm'}" Width="80" />
-                        <DataGridTextColumn Header="Patient" Binding="{Binding DisplayPatientName}" Width="190" />
-                        <DataGridTextColumn Header="Phone" Binding="{Binding DisplayPatientPhone}" Width="130" />
-                        <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="110" />
-                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="110" />
-                        <DataGridTextColumn Header="Notes" Binding="{Binding Notes}" Width="*" />
-                    </DataGrid.Columns>
-                </DataGrid>
+        <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding Appointments}"
+                  SelectedItem="{Binding SelectedAppointment}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  SelectionMode="Single"
+                  CanUserAddRows="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Token #" Binding="{Binding TokenNumber}" Width="85" FontWeight="Bold" />
+                <DataGridTextColumn Header="Time" Binding="{Binding AppointmentTime, StringFormat='hh\\:mm'}" Width="80" />
+                <DataGridTextColumn Header="Patient" Binding="{Binding DisplayPatientName}" Width="190" />
+                <DataGridTextColumn Header="Phone" Binding="{Binding DisplayPatientPhone}" Width="130" />
+                <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="110" />
+                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="110" />
+                <DataGridTextColumn Header="Notes" Binding="{Binding Notes}" Width="*" />
+            </DataGrid.Columns>
+        </DataGrid>
 
-                <!-- Workflow Action Bar -->
-                <WrapPanel Grid.Row="2" Margin="0,12,0,0">
-                    <Button Content="Print Token (80mm)" Command="{Binding PrintTokenCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,6" />
-                    <Button Content="Confirm" Command="{Binding ConfirmCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6" />
-                    <Button Content="Start Visit" Command="{Binding StartVisitCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6" />
-                    <Button Content="Complete" Command="{Binding CompleteCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6" />
-                    <Button Content="Open Consultation" Command="{Binding OpenConsultationCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6" />
-                    <Button Content="Generate Bill" Command="{Binding GenerateBillCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,14,6" />
-                    <TextBox Width="190"
-                             Text="{Binding CancellationReason, UpdateSourceTrigger=PropertyChanged}"
-                             materialDesign:HintAssist.Hint="Cancellation reason"
-                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                             Margin="0,0,8,6" />
-                    <Button Content="Cancel" Command="{Binding CancelAppointmentCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,0,6" />
-                </WrapPanel>
-            </Grid>
-        </TabItem>
-
-        <!-- Tab 2: Token History (All-time issued & facilitated) -->
-        <TabItem Header="Token History">
-            <Grid Margin="12">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-
-                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
-                    <DatePicker Width="145" SelectedDate="{Binding HistoryFromDate}" materialDesign:HintAssist.Hint="From" Style="{StaticResource MaterialDesignOutlinedDatePicker}" Margin="0,0,8,0" />
-                    <DatePicker Width="145" SelectedDate="{Binding HistoryToDate}" materialDesign:HintAssist.Hint="To" Style="{StaticResource MaterialDesignOutlinedDatePicker}" Margin="0,0,8,0" />
-                    <Button Content="Load History" Command="{Binding FilterTokenHistoryCommand}" Style="{StaticResource MaterialDesignRaisedButton}" />
-                </StackPanel>
-
-                <WrapPanel Grid.Row="1" Margin="0,0,0,12">
-                    <materialDesign:Card Padding="14" Width="200" Margin="0,0,12,0" UniformCornerRadius="8">
-                        <StackPanel>
-                            <TextBlock Text="Total Tokens Issued" Opacity="0.7" />
-                            <TextBlock Text="{Binding TotalTokensIssued}" Style="{StaticResource MaterialDesignHeadline5TextBlock}" />
-                        </StackPanel>
-                    </materialDesign:Card>
-                    <materialDesign:Card Padding="14" Width="220" UniformCornerRadius="8">
-                        <StackPanel>
-                            <TextBlock Text="Patients Facilitated" Opacity="0.7" />
-                            <TextBlock Text="{Binding CompletedTokensCount}" Foreground="#00796B" Style="{StaticResource MaterialDesignHeadline5TextBlock}" />
-                        </StackPanel>
-                    </materialDesign:Card>
-                </WrapPanel>
-
-                <DataGrid Grid.Row="2" ItemsSource="{Binding TokenHistory}" AutoGenerateColumns="False" IsReadOnly="True">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Date" Binding="{Binding AppointmentDate, StringFormat='dd/MM/yyyy'}" Width="105" />
-                        <DataGridTextColumn Header="Token #" Binding="{Binding TokenNumber}" Width="85" FontWeight="Bold" />
-                        <DataGridTextColumn Header="Time" Binding="{Binding AppointmentTime, StringFormat='hh\\:mm'}" Width="80" />
-                        <DataGridTextColumn Header="Patient" Binding="{Binding DisplayPatientName}" Width="210" />
-                        <DataGridTextColumn Header="Phone" Binding="{Binding DisplayPatientPhone}" Width="140" />
-                        <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="110" />
-                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*" />
-                    </DataGrid.Columns>
-                </DataGrid>
-            </Grid>
-        </TabItem>
-    </TabControl>
+        <!-- Workflow Action Bar -->
+        <WrapPanel Grid.Row="2" Margin="0,12,0,0">
+            <Button Content="Confirm" Command="{Binding ConfirmCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6" />
+            <Button Content="Start Visit" Command="{Binding StartVisitCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6" />
+            <Button Content="Complete" Command="{Binding CompleteCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6" />
+            <Button Content="Open Consultation" Command="{Binding OpenConsultationCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6" />
+            <Button Content="Generate Bill" Command="{Binding GenerateBillCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,14,6" />
+            <TextBox Width="190"
+                     Text="{Binding CancellationReason, UpdateSourceTrigger=PropertyChanged}"
+                     materialDesign:HintAssist.Hint="Cancellation reason"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                     Margin="0,0,8,6" />
+            <Button Content="Cancel" Command="{Binding CancelAppointmentCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,0,6" />
+        </WrapPanel>
+    </Grid>
 </UserControl>

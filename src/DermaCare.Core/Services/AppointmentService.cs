@@ -72,19 +72,50 @@ public class AppointmentService : IAppointmentService
                 return new ServiceResult<Appointment>(false, ErrorMessage: "An appointment already exists at that date and time.");
         }
 
-        var nextSeq = await _appointmentRepository.GetNextTokenSequenceAsync(appointment.AppointmentDate, isWalkIn, ct);
-        if (nextSeq <= 0) nextSeq = 1;
+        if (isWalkIn)
+        {
+            var nextSeq = await _appointmentRepository.GetNextTokenSequenceAsync(appointment.AppointmentDate, true, ct);
+            if (nextSeq <= 0) nextSeq = 1;
+            appointment.TokenSequence = nextSeq;
+            appointment.TokenNumber = $"W-{nextSeq:D3}";
+        }
+        else
+        {
+            appointment.TokenSequence = 0;
+            appointment.TokenNumber = string.Empty;
+        }
 
-        var prefix = isWalkIn ? "W" : "P";
         appointment.Status = AppointmentStatus.Scheduled;
-        appointment.TokenSequence = nextSeq;
-        appointment.TokenNumber = $"{prefix}-{nextSeq:D3}";
         appointment.PatientName = string.IsNullOrWhiteSpace(appointment.PatientName) ? null : appointment.PatientName.Trim();
         appointment.PatientPhone = string.IsNullOrWhiteSpace(appointment.PatientPhone) ? null : appointment.PatientPhone.Trim();
         appointment.CreatedBy = _session.CurrentUser?.UserId ?? 0;
         appointment.CreatedAt = DateTime.UtcNow;
 
         await _appointmentRepository.AddAsync(appointment, ct);
+        return new ServiceResult<Appointment>(true, appointment);
+    }
+
+    public async Task<ServiceResult<Appointment>> IssueAppointmentTokenAsync(int appointmentId, CancellationToken ct = default)
+    {
+        var appointment = await _appointmentRepository.GetByIdAsync(appointmentId, ct);
+        if (appointment is null)
+            return new ServiceResult<Appointment>(false, ErrorMessage: "Appointment not found.");
+        if (appointment.Status == AppointmentStatus.Cancelled)
+            return new ServiceResult<Appointment>(false, ErrorMessage: "Cannot issue a token for a cancelled appointment.");
+        if (!string.IsNullOrWhiteSpace(appointment.TokenNumber))
+            return new ServiceResult<Appointment>(false, ErrorMessage: $"Token {appointment.TokenNumber} is already issued for this appointment.");
+
+        var isWalkIn = appointment.Type == AppointmentType.WalkIn;
+        var nextSeq = await _appointmentRepository.GetNextTokenSequenceAsync(appointment.AppointmentDate, isWalkIn, ct);
+        if (nextSeq <= 0) nextSeq = 1;
+
+        var prefix = isWalkIn ? "W" : "P";
+        appointment.TokenSequence = nextSeq;
+        appointment.TokenNumber = $"{prefix}-{nextSeq:D3}";
+        if (appointment.Status == AppointmentStatus.Scheduled)
+            appointment.Status = AppointmentStatus.Confirmed;
+
+        await _appointmentRepository.UpdateAsync(appointment, ct);
         return new ServiceResult<Appointment>(true, appointment);
     }
 

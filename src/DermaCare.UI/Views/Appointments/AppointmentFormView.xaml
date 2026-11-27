@@ -4,7 +4,7 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
     <materialDesign:Card Margin="24" Padding="24" MaxWidth="620" UniformCornerRadius="8" VerticalAlignment="Top">
         <StackPanel>
-            <TextBlock Text="Book Appointment (P-Token)"
+            <TextBlock Text="Book Appointment"
                        Style="{StaticResource MaterialDesignHeadline5TextBlock}"
                        Margin="0,0,0,20" />
 
@@ -55,10 +55,6 @@
                      materialDesign:HintAssist.Hint="Notes"
                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
                      Margin="0,0,0,12" />
-
-            <CheckBox IsChecked="{Binding PrintTokenOnSave}"
-                      Content="Print 80mm Token Slip immediately after booking"
-                      Margin="0,0,0,14" />
 
             <TextBlock Text="{Binding ErrorMessage}"
                        Foreground="{DynamicResource MaterialDesignValidationErrorBrush}"

@@ -126,6 +126,7 @@ public partial class App : Application
         services.AddTransient<DoctorFormViewModel>();
         services.AddTransient<AppointmentCalendarViewModel>();
         services.AddTransient<AppointmentFormViewModel>();
+        services.AddTransient<TokenViewModel>();
         services.AddTransient<ConsultationViewModel>();
         services.AddTransient<InvoiceViewModel>();
         services.AddTransient<ReportsViewModel>();

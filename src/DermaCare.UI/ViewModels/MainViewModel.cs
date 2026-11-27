@@ -60,6 +60,12 @@ public class MainViewModel : BaseViewModel
             _navigationService.NavigateTo<AppointmentCalendarViewModel>();
         });
 
+        NavigateTokensCommand = new RelayCommand(() =>
+        {
+            PageTitle = "Tokens";
+            _navigationService.NavigateTo<TokenViewModel>();
+        });
+
         NavigateBillingCommand = new RelayCommand(() =>
         {
             PageTitle = "Billing & Invoices";
@@ -133,6 +139,7 @@ public class MainViewModel : BaseViewModel
     public ICommand NavigatePatientsCommand { get; }
     public ICommand NavigateDoctorsCommand { get; }
     public ICommand NavigateAppointmentsCommand { get; }
+    public ICommand NavigateTokensCommand { get; }
     public ICommand NavigateBillingCommand { get; }
     public ICommand NavigateSaleSummaryCommand { get; }
     public ICommand NavigateReportsCommand { get; }

@@ -60,9 +60,43 @@ public class AppointmentServiceTests
 
         Assert.True(result.Success);
         Assert.Equal(AppointmentStatus.Scheduled, result.Data?.Status);
+        Assert.Equal(string.Empty, result.Data?.TokenNumber);
+        Assert.Equal(0, result.Data?.TokenSequence);
+        apptRepo.Verify(r => r.AddAsync(It.IsAny<Appointment>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task IssueAppointmentTokenAsync_BookedAppointment_AssignsPTokenAndConfirms()
+    {
+        var apptRepo = new Mock<IAppointmentRepository>();
+        var docRepo = new Mock<IDoctorRepository>();
+        var docService = new Mock<IDoctorService>();
+        var session = new CurrentSession();
+
+        var booked = new Appointment
+        {
+            AppointmentId = 10,
+            PatientName = "Ayesha Khan",
+            PatientPhone = "0300-1234567",
+            DoctorId = 1,
+            AppointmentDate = DateTime.Today,
+            AppointmentTime = new TimeSpan(11, 0, 0),
+            Type = AppointmentType.Consultation,
+            Status = AppointmentStatus.Scheduled,
+            TokenNumber = string.Empty
+        };
+
+        apptRepo.Setup(r => r.GetByIdAsync(10, It.IsAny<CancellationToken>())).ReturnsAsync(booked);
+        apptRepo.Setup(r => r.GetNextTokenSequenceAsync(It.IsAny<DateTime>(), false, It.IsAny<CancellationToken>())).ReturnsAsync(4);
+
+        var sut = new AppointmentService(apptRepo.Object, docRepo.Object, docService.Object, session);
+        var result = await sut.IssueAppointmentTokenAsync(10);
+
+        Assert.True(result.Success);
         Assert.Equal("P-004", result.Data?.TokenNumber);
         Assert.Equal(4, result.Data?.TokenSequence);
-        apptRepo.Verify(r => r.AddAsync(It.IsAny<Appointment>(), It.IsAny<CancellationToken>()), Times.Once);
+        Assert.Equal(AppointmentStatus.Confirmed, result.Data?.Status);
+        apptRepo.Verify(r => r.UpdateAsync(booked, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
