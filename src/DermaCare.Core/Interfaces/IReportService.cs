@@ -6,6 +6,13 @@ public record PaymentMethodSummary(PaymentMethod Method, decimal Amount, int Cou
 
 public record ReceptionistRevenueSummary(int UserId, string ReceptionistName, decimal TotalCollected, int BillCount, decimal TotalDiscount);
 
+public record CompanyPurchaseSummary(
+    string CompanyName,
+    int BatchCount,
+    int TotalUnitsPurchased,
+    decimal TotalPurchaseCost,
+    int CurrentUnitsRemaining);
+
 public record ClinicReportSummary(
     int TotalAppointments,
     int CompletedAppointments,
@@ -21,4 +28,5 @@ public record ClinicReportSummary(
 public interface IReportService
 {
     Task<ClinicReportSummary> GenerateSummaryAsync(DateTime from, DateTime to, int? doctorId = null, CancellationToken ct = default);
+    Task<IReadOnlyList<CompanyPurchaseSummary>> GetCompanyPurchasesAsync(DateTime from, DateTime to, string? companyFilter = null, CancellationToken ct = default);
 }

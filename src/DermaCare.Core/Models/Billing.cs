@@ -50,8 +50,12 @@ public class InvoiceItem
     public string Description { get; set; } = string.Empty;
     public int Quantity { get; set; } = 1;
     public decimal UnitPrice { get; set; }
+    public decimal DiscountAmount { get; set; }
+    public decimal DiscountPercent { get; set; }
 
-    public decimal LineTotal => Quantity * UnitPrice;
+    public decimal GrossTotal => Quantity * UnitPrice;
+    public decimal EffectiveDiscount => Math.Min(GrossTotal, Math.Max(0m, DiscountAmount) + (GrossTotal * Math.Clamp(DiscountPercent, 0m, 100m) / 100m));
+    public decimal LineTotal => Math.Max(0m, GrossTotal - EffectiveDiscount);
 
     public Invoice? Invoice { get; set; }
     public ServiceItem? Service { get; set; }

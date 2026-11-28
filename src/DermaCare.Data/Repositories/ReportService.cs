@@ -84,4 +84,60 @@ public class ReportService : IReportService
             TotalDiscount: invoices.Sum(i => i.DiscountAmount),
             RevenueByReceptionist: revenueByReceptionist);
     }
+
+    public async Task<IReadOnlyList<CompanyPurchaseSummary>> GetCompanyPurchasesAsync(
+        DateTime from,
+        DateTime to,
+        string? companyFilter = null,
+        CancellationToken ct = default)
+    {
+        var utcStart = from.Date.ToUniversalTime();
+        var utcEnd = to.Date.AddDays(1).ToUniversalTime();
+
+        var purchases = await _context.StockTransactions
+            .Include(t => t.Medicine)
+            .Where(t => t.TransactionType == StockTransactionType.Purchase &&
+                        t.TransactionDate >= utcStart &&
+                        t.TransactionDate < utcEnd)
+            .ToListAsync(ct);
+
+        var batchIds = purchases.Where(p => p.BatchId.HasValue).Select(p => p.BatchId!.Value).Distinct().ToList();
+        var batches = await _context.MedicineBatches
+            .Where(b => batchIds.Contains(b.BatchId))
+            .ToDictionaryAsync(b => b.BatchId, ct);
+
+        var rows = purchases.Select(tx =>
+        {
+            batches.TryGetValue(tx.BatchId ?? 0, out var batch);
+            var company = !string.IsNullOrWhiteSpace(batch?.Supplier)
+                ? batch!.Supplier!.Trim()
+                : (!string.IsNullOrWhiteSpace(tx.Medicine?.Company) ? tx.Medicine!.Company!.Trim() : "Unspecified");
+            var unitCost = batch?.PurchasePrice > 0 ? batch.PurchasePrice : (tx.Medicine?.PurchasePrice ?? 0m);
+            return new
+            {
+                Company = company,
+                BatchId = batch?.BatchId ?? tx.TransactionId,
+                Units = tx.Quantity,
+                Cost = tx.Quantity * unitCost,
+                Remaining = batch?.QuantityRemaining ?? 0
+            };
+        });
+
+        if (!string.IsNullOrWhiteSpace(companyFilter))
+        {
+            var term = companyFilter.Trim();
+            rows = rows.Where(r => r.Company.Contains(term, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return rows
+            .GroupBy(r => r.Company, StringComparer.OrdinalIgnoreCase)
+            .Select(g => new CompanyPurchaseSummary(
+                CompanyName: g.First().Company,
+                BatchCount: g.Select(x => x.BatchId).Distinct().Count(),
+                TotalUnitsPurchased: g.Sum(x => x.Units),
+                TotalPurchaseCost: g.Sum(x => x.Cost),
+                CurrentUnitsRemaining: g.Sum(x => x.Remaining)))
+            .OrderByDescending(c => c.TotalPurchaseCost)
+            .ToList();
+    }
 }

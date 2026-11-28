@@ -13,6 +13,7 @@ public class Medicine
     public int MedicineId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? GenericName { get; set; }
+    public string? Company { get; set; }
     public string Category { get; set; } = "Cream";
     public string Unit { get; set; } = "Tube";
     public int MinStockLevel { get; set; } = 10;

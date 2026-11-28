@@ -70,12 +70,13 @@
                                   IsReadOnly="True"
                                   SelectionMode="Single">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="180" />
-                                <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="90" />
-                                <DataGridTextColumn Header="Unit" Binding="{Binding Unit}" Width="70" />
-                                <DataGridTextColumn Header="Stock" Binding="{Binding CurrentStock}" Width="70" />
-                                <DataGridTextColumn Header="Min" Binding="{Binding MinStockLevel}" Width="60" />
-                                <DataGridTextColumn Header="Buy (PKR)" Binding="{Binding PurchasePrice, StringFormat=C}" Width="100" />
+                                <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="165" />
+                                <DataGridTextColumn Header="Company" Binding="{Binding Company}" Width="105" />
+                                <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="85" />
+                                <DataGridTextColumn Header="Unit" Binding="{Binding Unit}" Width="65" />
+                                <DataGridTextColumn Header="Stock" Binding="{Binding CurrentStock}" Width="65" />
+                                <DataGridTextColumn Header="Min" Binding="{Binding MinStockLevel}" Width="55" />
+                                <DataGridTextColumn Header="Buy (PKR)" Binding="{Binding PurchasePrice, StringFormat=C}" Width="95" />
                                 <DataGridTextColumn Header="Sell (PKR)" Binding="{Binding SellingPrice, StringFormat=C}" Width="*" />
                             </DataGrid.Columns>
                         </DataGrid>
@@ -115,6 +116,7 @@
                                     <TextBlock Text="Add New Medicine" Style="{StaticResource MaterialDesignSubtitle1TextBlock}" Margin="0,0,0,8" />
                                     <TextBox Text="{Binding MedName, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Medicine Name *" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,8" />
                                     <TextBox Text="{Binding MedGeneric, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Generic Name" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,8" />
+                                    <TextBox Text="{Binding MedCompany, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Company / Manufacturer (e.g. GSK)" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,8" />
                                     <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding MedCategory}" materialDesign:HintAssist.Hint="Category" Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,0,0,8" />
                                     <ComboBox ItemsSource="{Binding Units}" SelectedItem="{Binding MedUnit}" materialDesign:HintAssist.Hint="Unit" Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,0,0,8" />
                                     <TextBox Text="{Binding MedMinStock, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Min Stock Alert Level" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,8" />

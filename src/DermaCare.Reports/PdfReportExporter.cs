@@ -110,10 +110,13 @@ public class PdfReportExporter
         {
             var row = table.AddRow();
             row.Cells[0].AddParagraph(item.ItemType.ToString());
-            row.Cells[1].AddParagraph(item.Description);
+            var descText = item.EffectiveDiscount > 0
+                ? $"{item.Description} (Disc: -Rs. {item.EffectiveDiscount:N0})"
+                : item.Description;
+            row.Cells[1].AddParagraph(descText);
             row.Cells[2].AddParagraph(item.Quantity.ToString());
             row.Cells[3].AddParagraph($"Rs. {item.UnitPrice:N2}");
-            row.Cells[4].AddParagraph($"Rs. {(item.Quantity * item.UnitPrice):N2}");
+            row.Cells[4].AddParagraph($"Rs. {item.LineTotal:N2}");
         }
 
         section.AddParagraph(" ").Format.SpaceAfter = 8;

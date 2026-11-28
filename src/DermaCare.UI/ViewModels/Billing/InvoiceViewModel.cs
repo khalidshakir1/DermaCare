@@ -30,6 +30,9 @@ public class InvoiceViewModel : BaseViewModel
     private decimal _discountAmount;
     private decimal _discountPercent;
     private string? _discountReason;
+    private InvoiceItem? _selectedLineItem;
+    private decimal _itemDiscountAmount;
+    private decimal _itemDiscountPercent;
     private decimal _initialPaymentAmount;
     private PaymentMethod _initialPaymentMethod = PaymentMethod.Cash;
     private decimal _paymentAmount;
@@ -65,6 +68,7 @@ public class InvoiceViewModel : BaseViewModel
         AddMedicineCommand = new RelayCommand(AddMedicine);
         AddCustomItemCommand = new RelayCommand(AddCustomItem);
         RemoveLineItemCommand = new RelayCommand(RemoveLineItem);
+        ApplyItemDiscountCommand = new RelayCommand(ApplyItemDiscount, () => SelectedLineItem is not null);
         ApplyFullDiscountCommand = new RelayCommand(() =>
         {
             DiscountAmount = 0m;
@@ -147,6 +151,20 @@ public class InvoiceViewModel : BaseViewModel
         }
     }
     public string? DiscountReason { get => _discountReason; set => SetProperty(ref _discountReason, value); }
+    public InvoiceItem? SelectedLineItem
+    {
+        get => _selectedLineItem;
+        set
+        {
+            if (SetProperty(ref _selectedLineItem, value) && value is not null)
+            {
+                ItemDiscountAmount = value.DiscountAmount;
+                ItemDiscountPercent = value.DiscountPercent;
+            }
+        }
+    }
+    public decimal ItemDiscountAmount { get => _itemDiscountAmount; set => SetProperty(ref _itemDiscountAmount, value); }
+    public decimal ItemDiscountPercent { get => _itemDiscountPercent; set => SetProperty(ref _itemDiscountPercent, value); }
     public decimal InitialPaymentAmount { get => _initialPaymentAmount; set => SetProperty(ref _initialPaymentAmount, value); }
     public PaymentMethod InitialPaymentMethod { get => _initialPaymentMethod; set => SetProperty(ref _initialPaymentMethod, value); }
     public decimal PaymentAmount { get => _paymentAmount; set => SetProperty(ref _paymentAmount, value); }
@@ -162,14 +180,16 @@ public class InvoiceViewModel : BaseViewModel
         }
     }
 
-    public decimal DraftSubtotal => LineItems.Sum(i => i.Quantity * i.UnitPrice);
+    public decimal DraftSubtotal => LineItems.Sum(i => i.GrossTotal);
     public decimal DraftTotal
     {
         get
         {
-            var sub = DraftSubtotal;
-            var disc = Math.Max(0m, DiscountAmount) + (sub * Math.Clamp(DiscountPercent, 0m, 100m) / 100m);
-            return Math.Max(0m, sub - Math.Min(sub, disc));
+            var gross = DraftSubtotal;
+            var itemDisc = LineItems.Sum(i => i.EffectiveDiscount);
+            var afterItem = Math.Max(0m, gross - itemDisc);
+            var billDisc = Math.Max(0m, DiscountAmount) + (afterItem * Math.Clamp(DiscountPercent, 0m, 100m) / 100m);
+            return Math.Max(0m, gross - Math.Min(gross, itemDisc + billDisc));
         }
     }
 
@@ -184,6 +204,7 @@ public class InvoiceViewModel : BaseViewModel
     public ICommand AddMedicineCommand { get; }
     public ICommand AddCustomItemCommand { get; }
     public ICommand RemoveLineItemCommand { get; }
+    public ICommand ApplyItemDiscountCommand { get; }
     public ICommand ApplyFullDiscountCommand { get; }
     public ICommand ApplyPercentPresetCommand { get; }
     public ICommand FillInitialFullCommand { get; }
@@ -319,6 +340,24 @@ public class InvoiceViewModel : BaseViewModel
             OnPropertyChanged(nameof(DraftSubtotal));
             OnPropertyChanged(nameof(DraftTotal));
         }
+    }
+
+    private void ApplyItemDiscount()
+    {
+        if (SelectedLineItem is null) return;
+        SelectedLineItem.DiscountAmount = Math.Max(0m, ItemDiscountAmount);
+        SelectedLineItem.DiscountPercent = Math.Clamp(ItemDiscountPercent, 0m, 100m);
+
+        var idx = LineItems.IndexOf(SelectedLineItem);
+        if (idx >= 0)
+        {
+            var updated = SelectedLineItem;
+            LineItems[idx] = updated;
+            SelectedLineItem = updated;
+        }
+
+        OnPropertyChanged(nameof(DraftSubtotal));
+        OnPropertyChanged(nameof(DraftTotal));
     }
 
     private async Task CreateInvoiceAsync()

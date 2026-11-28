@@ -17,6 +17,7 @@ public class InventoryViewModel : BaseViewModel
     // Add / Edit Medicine fields
     private string _medName = string.Empty;
     private string _medGeneric = string.Empty;
+    private string _medCompany = string.Empty;
     private string _medCategory = "Cream";
     private string _medUnit = "Tube";
     private int _medMinStock = 10;
@@ -83,12 +84,15 @@ public class InventoryViewModel : BaseViewModel
             {
                 BatchPurchasePrice = value.PurchasePrice;
                 BatchSellingPrice = value.SellingPrice;
+                if (string.IsNullOrWhiteSpace(Supplier) && !string.IsNullOrWhiteSpace(value.Company))
+                    Supplier = value.Company;
             }
         }
     }
 
     public string MedName { get => _medName; set => SetProperty(ref _medName, value); }
     public string MedGeneric { get => _medGeneric; set => SetProperty(ref _medGeneric, value); }
+    public string MedCompany { get => _medCompany; set => SetProperty(ref _medCompany, value); }
     public string MedCategory { get => _medCategory; set => SetProperty(ref _medCategory, value); }
     public string MedUnit { get => _medUnit; set => SetProperty(ref _medUnit, value); }
     public int MedMinStock { get => _medMinStock; set => SetProperty(ref _medMinStock, value); }
@@ -148,6 +152,7 @@ public class InventoryViewModel : BaseViewModel
         {
             Name = MedName,
             GenericName = MedGeneric,
+            Company = MedCompany,
             Category = MedCategory,
             Unit = MedUnit,
             MinStockLevel = MedMinStock,
@@ -164,6 +169,7 @@ public class InventoryViewModel : BaseViewModel
 
         MedName = string.Empty;
         MedGeneric = string.Empty;
+        MedCompany = string.Empty;
         MedPurchasePrice = 0;
         MedSellingPrice = 0;
         StatusMessage = $"Added medicine '{result.Data!.Name}'.";

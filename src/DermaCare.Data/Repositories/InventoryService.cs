@@ -22,6 +22,7 @@ public class InventoryService : IInventoryService
             query = query.Where(m =>
                 m.Name.ToLower().Contains(term) ||
                 (m.GenericName != null && m.GenericName.ToLower().Contains(term)) ||
+                (m.Company != null && m.Company.ToLower().Contains(term)) ||
                 m.Category.ToLower().Contains(term));
         }
 
@@ -38,6 +39,7 @@ public class InventoryService : IInventoryService
 
         medicine.Name = medicine.Name.Trim();
         medicine.GenericName = medicine.GenericName?.Trim();
+        medicine.Company = medicine.Company?.Trim();
         medicine.Category = string.IsNullOrWhiteSpace(medicine.Category) ? "Cream" : medicine.Category.Trim();
         medicine.Unit = string.IsNullOrWhiteSpace(medicine.Unit) ? "Tube" : medicine.Unit.Trim();
 
@@ -85,7 +87,7 @@ public class InventoryService : IInventoryService
             PurchaseDate = DateTime.UtcNow,
             QuantityRemaining = quantity,
             PurchasePrice = purchasePrice,
-            Supplier = supplier?.Trim()
+            Supplier = string.IsNullOrWhiteSpace(supplier) ? medicine.Company : supplier.Trim()
         };
 
         _context.MedicineBatches.Add(batch);

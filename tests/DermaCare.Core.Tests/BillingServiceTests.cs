@@ -132,4 +132,27 @@ public class BillingServiceTests
         Assert.Equal("Walk-In Customer", result.Data?.DisplayCustomerName);
         Assert.Equal(1800m, result.Data?.TotalAmount);
     }
+
+    [Fact]
+    public async Task CreateInvoiceAsync_WithPerItemDiscount_AppliesDiscountOnlyToTargetItem()
+    {
+        var repo = new Mock<IBillingRepository>();
+        repo.Setup(r => r.GenerateNextBillNumberAsync(It.IsAny<CancellationToken>())).ReturnsAsync("BILL-0100");
+        var sut = new BillingService(repo.Object, new CurrentSession());
+
+        var items = new[]
+        {
+            new InvoiceItem { ItemType = BillItemType.Consultation, Description = "Consultation", Quantity = 1, UnitPrice = 2500m },
+            new InvoiceItem { ItemType = BillItemType.Service, Description = "Chemical Peel", Quantity = 1, UnitPrice = 6000m, DiscountAmount = 1000m }
+        };
+
+        var result = await sut.CreateInvoiceAsync(null, null, items);
+
+        Assert.True(result.Success);
+        Assert.Equal(8500m, result.Data?.Subtotal);
+        Assert.Equal(1000m, result.Data?.DiscountAmount);
+        Assert.Equal(7500m, result.Data?.TotalAmount);
+        Assert.Equal(2500m, result.Data?.Items.First().LineTotal);
+        Assert.Equal(5000m, result.Data?.Items.Last().LineTotal);
+    }
 }

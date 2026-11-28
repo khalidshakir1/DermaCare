@@ -61,6 +61,8 @@ public static class ReceiptPrintHelper
             var qty = item.Quantity.ToString().PadLeft(3);
             var total = $"Rs.{item.LineTotal:N0}".PadLeft(8);
             AddLine($"{desc} {qty} {total}");
+            if (item.EffectiveDiscount > 0)
+                AddLine($"  (Disc: -Rs.{item.EffectiveDiscount:N0})", size: 9);
         }
 
         AddLine("--------------------------------", align: TextAlignment.Center);

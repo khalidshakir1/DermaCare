@@ -66,6 +66,35 @@
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
+            <TabItem Header="Company Purchases">
+                <Grid Margin="0,8,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+                        <TextBox Width="230"
+                                 Text="{Binding CompanyFilter, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Filter Company (e.g. GSK)..."
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Margin="0,0,8,0" />
+                        <Button Content="Filter" Command="{Binding GenerateCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,16,0" />
+                        <TextBlock Text="{Binding TotalCompanyPurchaseCost, StringFormat='Total Purchased: Rs. {0:N0}'}"
+                                   FontWeight="Bold"
+                                   Foreground="#1565C0"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding CompanyPurchases}" AutoGenerateColumns="False" IsReadOnly="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Company / Supplier" Binding="{Binding CompanyName}" Width="220" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="Batches" Binding="{Binding BatchCount}" Width="90" />
+                            <DataGridTextColumn Header="Units Purchased" Binding="{Binding TotalUnitsPurchased}" Width="140" />
+                            <DataGridTextColumn Header="Purchase Cost (PKR)" Binding="{Binding TotalPurchaseCost, StringFormat='Rs. {0:N2}'}" Width="170" />
+                            <DataGridTextColumn Header="Remaining Stock" Binding="{Binding CurrentUnitsRemaining}" Width="*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
             <TabItem Header="Bills">
                 <DataGrid ItemsSource="{Binding Invoices}" AutoGenerateColumns="False" IsReadOnly="True">
                     <DataGrid.Columns>

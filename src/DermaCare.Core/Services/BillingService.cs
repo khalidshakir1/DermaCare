@@ -86,10 +86,12 @@ public class BillingService : IBillingService
             }
         }
 
-        var subtotal = itemList.Sum(i => i.Quantity * i.UnitPrice);
-        var computedDiscount = discountAmount + (subtotal * discountPercent / 100m);
-        if (computedDiscount > subtotal) computedDiscount = subtotal;
-        var total = Math.Max(0m, subtotal - computedDiscount);
+        var grossSubtotal = itemList.Sum(i => i.GrossTotal);
+        var itemDiscounts = itemList.Sum(i => i.EffectiveDiscount);
+        var afterItemDiscount = Math.Max(0m, grossSubtotal - itemDiscounts);
+        var billDiscount = discountAmount + (afterItemDiscount * discountPercent / 100m);
+        var totalDiscount = Math.Min(grossSubtotal, itemDiscounts + billDiscount);
+        var total = Math.Max(0m, grossSubtotal - totalDiscount);
 
         var billNumber = await _billingRepository.GenerateNextBillNumberAsync(ct);
         if (string.IsNullOrWhiteSpace(billNumber))
@@ -101,8 +103,8 @@ public class BillingService : IBillingService
             PatientId = patientId is > 0 ? patientId : null,
             CustomerName = string.IsNullOrWhiteSpace(customerName) ? null : customerName.Trim(),
             AppointmentId = appointmentId,
-            Subtotal = subtotal,
-            DiscountAmount = computedDiscount,
+            Subtotal = grossSubtotal,
+            DiscountAmount = totalDiscount,
             DiscountPercent = discountPercent,
             DiscountReason = string.IsNullOrWhiteSpace(discountReason) ? null : discountReason.Trim(),
             TotalAmount = total,

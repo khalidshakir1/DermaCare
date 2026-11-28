@@ -17,6 +17,7 @@ public class ReportsViewModel : BaseViewModel
 
     private DateTime _fromDate = DateTime.Today.AddDays(-6);
     private DateTime _toDate = DateTime.Today;
+    private string? _companyFilter;
     private ClinicReportSummary? _summary;
     private string? _statusMessage;
 
@@ -34,6 +35,7 @@ public class ReportsViewModel : BaseViewModel
         Appointments = new ObservableCollection<Appointment>();
         Invoices = new ObservableCollection<Invoice>();
         RevenueByMethod = new ObservableCollection<PaymentMethodSummary>();
+        CompanyPurchases = new ObservableCollection<CompanyPurchaseSummary>();
 
         DailyClosingCommand = new RelayCommand(async () =>
         {
@@ -64,9 +66,12 @@ public class ReportsViewModel : BaseViewModel
     public ObservableCollection<Appointment> Appointments { get; }
     public ObservableCollection<Invoice> Invoices { get; }
     public ObservableCollection<PaymentMethodSummary> RevenueByMethod { get; }
+    public ObservableCollection<CompanyPurchaseSummary> CompanyPurchases { get; }
 
     public DateTime FromDate { get => _fromDate; set => SetProperty(ref _fromDate, value); }
     public DateTime ToDate { get => _toDate; set => SetProperty(ref _toDate, value); }
+    public string? CompanyFilter { get => _companyFilter; set => SetProperty(ref _companyFilter, value); }
+    public decimal TotalCompanyPurchaseCost => CompanyPurchases.Sum(c => c.TotalPurchaseCost);
 
     public int TotalAppointments => _summary?.TotalAppointments ?? 0;
     public int CompletedAppointments => _summary?.CompletedAppointments ?? 0;
@@ -100,11 +105,16 @@ public class ReportsViewModel : BaseViewModel
         RevenueByMethod.Clear();
         foreach (var m in _summary.RevenueByMethod) RevenueByMethod.Add(m);
 
+        var companyRows = await _reportService.GetCompanyPurchasesAsync(FromDate, ToDate, CompanyFilter);
+        CompanyPurchases.Clear();
+        foreach (var c in companyRows) CompanyPurchases.Add(c);
+
         OnPropertyChanged(nameof(TotalAppointments));
         OnPropertyChanged(nameof(CompletedAppointments));
         OnPropertyChanged(nameof(NewPatients));
         OnPropertyChanged(nameof(TotalBilled));
         OnPropertyChanged(nameof(TotalCollected));
+        OnPropertyChanged(nameof(TotalCompanyPurchaseCost));
         StatusMessage = $"Showing report for {FromDate:dd/MM/yyyy} – {ToDate:dd/MM/yyyy}.";
     }
 

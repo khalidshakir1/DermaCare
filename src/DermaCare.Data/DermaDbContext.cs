@@ -149,6 +149,10 @@ public class DermaDbContext : DbContext
             e.HasKey(x => x.ItemId);
             e.Property(x => x.Description).HasMaxLength(200).IsRequired();
             e.Property(x => x.UnitPrice).HasPrecision(18, 2);
+            e.Property(x => x.DiscountAmount).HasPrecision(18, 2);
+            e.Property(x => x.DiscountPercent).HasPrecision(5, 2);
+            e.Ignore(x => x.GrossTotal);
+            e.Ignore(x => x.EffectiveDiscount);
             e.Ignore(x => x.LineTotal);
             e.HasOne(x => x.Invoice).WithMany(i => i.Items).HasForeignKey(x => x.InvoiceId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(x => x.Service).WithMany().HasForeignKey(x => x.ServiceId).OnDelete(DeleteBehavior.Restrict);
@@ -181,6 +185,7 @@ public class DermaDbContext : DbContext
             e.HasKey(x => x.MedicineId);
             e.Property(x => x.Name).HasMaxLength(150).IsRequired();
             e.Property(x => x.GenericName).HasMaxLength(150);
+            e.Property(x => x.Company).HasMaxLength(120);
             e.Property(x => x.Category).HasMaxLength(60).IsRequired();
             e.Property(x => x.Unit).HasMaxLength(30).IsRequired();
             e.Property(x => x.PurchasePrice).HasPrecision(18, 2);

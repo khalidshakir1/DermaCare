@@ -124,17 +124,20 @@
 
                     <!-- Line Items Table -->
                     <DataGrid ItemsSource="{Binding LineItems}"
+                              SelectedItem="{Binding SelectedLineItem}"
                               AutoGenerateColumns="False"
                               IsReadOnly="True"
-                              Height="170"
-                              Margin="0,0,0,10">
+                              SelectionMode="Single"
+                              Height="160"
+                              Margin="0,0,0,8">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Type" Binding="{Binding ItemType}" Width="90" />
+                            <DataGridTextColumn Header="Type" Binding="{Binding ItemType}" Width="80" />
                             <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*" />
-                            <DataGridTextColumn Header="Qty" Binding="{Binding Quantity}" Width="50" />
-                            <DataGridTextColumn Header="Price" Binding="{Binding UnitPrice, StringFormat='Rs. {0:N0}'}" Width="85" />
-                            <DataGridTextColumn Header="Total" Binding="{Binding LineTotal, StringFormat='Rs. {0:N0}'}" Width="90" />
-                            <DataGridTemplateColumn Header="" Width="65">
+                            <DataGridTextColumn Header="Qty" Binding="{Binding Quantity}" Width="45" />
+                            <DataGridTextColumn Header="Price" Binding="{Binding UnitPrice, StringFormat='Rs. {0:N0}'}" Width="80" />
+                            <DataGridTextColumn Header="Disc." Binding="{Binding EffectiveDiscount, StringFormat='Rs. {0:N0}'}" Width="75" />
+                            <DataGridTextColumn Header="Total" Binding="{Binding LineTotal, StringFormat='Rs. {0:N0}'}" Width="85" />
+                            <DataGridTemplateColumn Header="" Width="55">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button Content="X"
@@ -147,6 +150,24 @@
                             </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
+
+                    <!-- Per-Item Discount (for selected row, e.g. Procedure only) -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <TextBlock Text="Selected Item Disc:" VerticalAlignment="Center" Opacity="0.75" Margin="0,0,8,0" />
+                        <TextBox Width="105"
+                                 Text="{Binding ItemDiscountAmount, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Item Disc (Rs.)"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Margin="0,0,6,0" />
+                        <TextBox Width="95"
+                                 Text="{Binding ItemDiscountPercent, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Item Disc (%)"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Margin="0,0,8,0" />
+                        <Button Content="Apply to Item"
+                                Command="{Binding ApplyItemDiscountCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}" />
+                    </StackPanel>
 
                     <!-- Notes, Discounts & Initial Payment -->
                     <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}"
