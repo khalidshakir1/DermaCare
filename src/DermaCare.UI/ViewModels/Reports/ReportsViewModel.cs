@@ -18,8 +18,7 @@ public class ReportsViewModel : BaseViewModel
 
     private DateTime _fromDate = DateTime.Today.AddDays(-6);
     private DateTime _toDate = DateTime.Today;
-    private string? _companyFilter;
-    private bool _groupByVendor;
+    private string? _supplierFilter;
     private ClinicReportSummary? _summary;
     private string? _statusMessage;
 
@@ -37,8 +36,8 @@ public class ReportsViewModel : BaseViewModel
         Appointments = new ObservableCollection<Appointment>();
         Invoices = new ObservableCollection<Invoice>();
         RevenueByMethod = new ObservableCollection<PaymentMethodSummary>();
-        CompanyPurchases = new ObservableCollection<CompanyPurchaseSummary>();
-        BrandVendorDetails = new ObservableCollection<BrandVendorPurchaseDetail>();
+        SupplierReports = new ObservableCollection<SupplierReportSummary>();
+        SupplierBatchDetails = new ObservableCollection<SupplierBatchDetail>();
 
         DailyClosingCommand = new RelayCommand(async () =>
         {
@@ -69,33 +68,14 @@ public class ReportsViewModel : BaseViewModel
     public ObservableCollection<Appointment> Appointments { get; }
     public ObservableCollection<Invoice> Invoices { get; }
     public ObservableCollection<PaymentMethodSummary> RevenueByMethod { get; }
-    public ObservableCollection<CompanyPurchaseSummary> CompanyPurchases { get; }
-    public ObservableCollection<BrandVendorPurchaseDetail> BrandVendorDetails { get; }
+    public ObservableCollection<SupplierReportSummary> SupplierReports { get; }
+    public ObservableCollection<SupplierBatchDetail> SupplierBatchDetails { get; }
 
     public DateTime FromDate { get => _fromDate; set => SetProperty(ref _fromDate, value); }
     public DateTime ToDate { get => _toDate; set => SetProperty(ref _toDate, value); }
-    public string? CompanyFilter { get => _companyFilter; set => SetProperty(ref _companyFilter, value); }
-    public bool GroupByVendor
-    {
-        get => _groupByVendor;
-        set
-        {
-            if (SetProperty(ref _groupByVendor, value))
-            {
-                OnPropertyChanged(nameof(GroupByBrand));
-                _ = LoadReportAsync();
-            }
-        }
-    }
-    public bool GroupByBrand
-    {
-        get => !_groupByVendor;
-        set
-        {
-            if (value) GroupByVendor = false;
-        }
-    }
-    public decimal TotalCompanyPurchaseCost => CompanyPurchases.Sum(c => c.TotalPurchaseCost);
+    public string? SupplierFilter { get => _supplierFilter; set => SetProperty(ref _supplierFilter, value); }
+    public decimal TotalSupplierPurchaseCost => SupplierReports.Sum(s => s.PurchaseCost);
+    public int TotalSupplierReturnedUnits => SupplierReports.Sum(s => s.UnitsReturned);
 
     public int TotalAppointments => _summary?.TotalAppointments ?? 0;
     public int CompletedAppointments => _summary?.CompletedAppointments ?? 0;
@@ -132,20 +112,21 @@ public class ReportsViewModel : BaseViewModel
             RevenueByMethod.Clear();
             foreach (var m in _summary.RevenueByMethod) RevenueByMethod.Add(m);
 
-            var companyRows = await _reportService.GetCompanyPurchasesAsync(FromDate, ToDate, CompanyFilter, GroupByVendor);
-            CompanyPurchases.Clear();
-            foreach (var c in companyRows) CompanyPurchases.Add(c);
+            var supplierRows = await _reportService.GetSupplierReportAsync(FromDate, ToDate, SupplierFilter);
+            SupplierReports.Clear();
+            foreach (var s in supplierRows) SupplierReports.Add(s);
 
-            var detailRows = await _reportService.GetBrandVendorPurchaseDetailsAsync(FromDate, ToDate, CompanyFilter);
-            BrandVendorDetails.Clear();
-            foreach (var d in detailRows) BrandVendorDetails.Add(d);
+            var detailRows = await _reportService.GetSupplierBatchDetailsAsync(FromDate, ToDate, SupplierFilter);
+            SupplierBatchDetails.Clear();
+            foreach (var d in detailRows) SupplierBatchDetails.Add(d);
 
             OnPropertyChanged(nameof(TotalAppointments));
             OnPropertyChanged(nameof(CompletedAppointments));
             OnPropertyChanged(nameof(NewPatients));
             OnPropertyChanged(nameof(TotalBilled));
             OnPropertyChanged(nameof(TotalCollected));
-            OnPropertyChanged(nameof(TotalCompanyPurchaseCost));
+            OnPropertyChanged(nameof(TotalSupplierPurchaseCost));
+            OnPropertyChanged(nameof(TotalSupplierReturnedUnits));
             StatusMessage = $"Showing report for {FromDate:dd/MM/yyyy} – {ToDate:dd/MM/yyyy}.";
         }
         finally

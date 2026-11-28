@@ -54,7 +54,7 @@ public class InventoryViewModel : BaseViewModel
 
         Categories = new[] { "Cream", "Ointment", "Gel", "Lotion", "Tablet", "Capsule", "Syrup", "Shampoo", "Injection", "Soap/Wash" };
         Units = new[] { "Tube", "Bottle", "Pack", "Strip", "Vial", "Pcs" };
-        AdjustTypes = new[] { StockTransactionType.Dispensed, StockTransactionType.Adjusted, StockTransactionType.Expired };
+        AdjustTypes = new[] { StockTransactionType.Dispensed, StockTransactionType.Returned, StockTransactionType.Adjusted, StockTransactionType.Expired };
 
         SearchCommand = new RelayCommand(async () => await LoadMedicinesAsync());
         AddMedicineCommand = new RelayCommand(async () => await AddMedicineAsync());

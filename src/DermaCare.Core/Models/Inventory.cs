@@ -5,7 +5,8 @@ public enum StockTransactionType
     Purchase = 1,
     Dispensed = 2,
     Adjusted = 3,
-    Expired = 4
+    Expired = 4,
+    Returned = 5
 }
 
 public class Medicine

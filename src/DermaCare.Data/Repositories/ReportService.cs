@@ -85,96 +85,91 @@ public class ReportService : IReportService
             RevenueByReceptionist: revenueByReceptionist);
     }
 
-    public async Task<IReadOnlyList<CompanyPurchaseSummary>> GetCompanyPurchasesAsync(
+    public async Task<IReadOnlyList<SupplierReportSummary>> GetSupplierReportAsync(
         DateTime from,
         DateTime to,
-        string? companyFilter = null,
-        bool groupByVendor = false,
+        string? supplierFilter = null,
         CancellationToken ct = default)
     {
+        var details = await GetSupplierBatchDetailsAsync(from, to, supplierFilter, ct);
+        var expiryCutoff = DateTime.Today.AddDays(30);
+
+        // Also include returns whose medicine wasn't purchased in this exact window
         var utcStart = from.Date.ToUniversalTime();
         var utcEnd = to.Date.AddDays(1).ToUniversalTime();
-
-        var purchases = await _context.StockTransactions
+        var returns = await _context.StockTransactions
             .Include(t => t.Medicine)
-            .Where(t => t.TransactionType == StockTransactionType.Purchase &&
+            .Where(t => t.TransactionType == StockTransactionType.Returned &&
                         t.TransactionDate >= utcStart &&
                         t.TransactionDate < utcEnd)
             .ToListAsync(ct);
 
-        var batchIds = purchases.Where(p => p.BatchId.HasValue).Select(p => p.BatchId!.Value).Distinct().ToList();
-        var batches = await _context.MedicineBatches
-            .Where(b => batchIds.Contains(b.BatchId))
+        var returnBatchIds = returns.Where(r => r.BatchId.HasValue).Select(r => r.BatchId!.Value).Distinct().ToList();
+        var returnBatches = await _context.MedicineBatches
+            .Where(b => returnBatchIds.Contains(b.BatchId))
             .ToDictionaryAsync(b => b.BatchId, ct);
 
-        // Also compute medicine sales in the date range for brand-wise sales reporting
-        var soldItems = await _context.InvoiceItems
-            .Include(i => i.Invoice)
-            .Include(i => i.Medicine)
-            .Where(i => i.MedicineId.HasValue &&
-                        i.Invoice != null &&
-                        i.Invoice.IssuedAt >= utcStart &&
-                        i.Invoice.IssuedAt < utcEnd &&
-                        i.Invoice.Status != InvoiceStatus.Void)
-            .ToListAsync(ct);
-
-        var salesByBrand = soldItems
-            .GroupBy(i => string.IsNullOrWhiteSpace(i.Medicine?.Company) ? "Unspecified" : i.Medicine!.Company!.Trim(), StringComparer.OrdinalIgnoreCase)
-            .ToDictionary(
-                g => g.Key,
-                g => (Units: g.Sum(x => x.Quantity), Revenue: g.Sum(x => x.Quantity * x.UnitPrice - x.DiscountAmount)),
-                StringComparer.OrdinalIgnoreCase);
-
-        var rows = purchases.Select(tx =>
-        {
-            batches.TryGetValue(tx.BatchId ?? 0, out var batch);
-            var brand = string.IsNullOrWhiteSpace(tx.Medicine?.Company) ? "Unspecified" : tx.Medicine!.Company!.Trim();
-            var vendor = string.IsNullOrWhiteSpace(batch?.Supplier) ? "Unspecified" : batch!.Supplier!.Trim();
-            var key = groupByVendor ? vendor : brand;
-            var unitCost = batch?.PurchasePrice > 0 ? batch.PurchasePrice : (tx.Medicine?.PurchasePrice ?? 0m);
-            return new
+        var extraReturnsBySupplier = returns
+            .GroupBy(r =>
             {
-                Key = key,
-                BatchId = batch?.BatchId ?? tx.TransactionId,
-                Units = tx.Quantity,
-                Cost = tx.Quantity * unitCost,
-                Remaining = batch?.QuantityRemaining ?? 0
-            };
-        });
+                returnBatches.TryGetValue(r.BatchId ?? 0, out var b);
+                return !string.IsNullOrWhiteSpace(b?.Supplier)
+                    ? b!.Supplier!.Trim()
+                    : (!string.IsNullOrWhiteSpace(r.Medicine?.Company) ? r.Medicine!.Company!.Trim() : "Unspecified");
+            }, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.Sum(x => Math.Abs(x.Quantity)), StringComparer.OrdinalIgnoreCase);
 
-        if (!string.IsNullOrWhiteSpace(companyFilter))
-        {
-            var term = companyFilter.Trim();
-            rows = rows.Where(r => r.Key.Contains(term, StringComparison.OrdinalIgnoreCase));
-        }
-
-        return rows
-            .GroupBy(r => r.Key, StringComparer.OrdinalIgnoreCase)
+        var grouped = details
+            .GroupBy(d => d.SupplierName, StringComparer.OrdinalIgnoreCase)
             .Select(g =>
             {
-                var name = g.First().Key;
-                var sales = !groupByVendor && salesByBrand.TryGetValue(name, out var s) ? s : (Units: 0, Revenue: 0m);
-                return new CompanyPurchaseSummary(
-                    CompanyName: name,
-                    BatchCount: g.Select(x => x.BatchId).Distinct().Count(),
-                    TotalUnitsPurchased: g.Sum(x => x.Units),
-                    TotalPurchaseCost: g.Sum(x => x.Cost),
-                    CurrentUnitsRemaining: g.Sum(x => x.Remaining),
-                    UnitsSold: sales.Units,
-                    SalesRevenue: sales.Revenue);
+                var name = g.First().SupplierName;
+                var retUnits = extraReturnsBySupplier.TryGetValue(name, out var r) ? r : g.Sum(x => x.UnitsReturned);
+                var expUnits = g.Where(x => x.ExpiryDate.Date <= expiryCutoff).Sum(x => x.RemainingStock);
+                return new SupplierReportSummary(
+                    SupplierName: name,
+                    BatchCount: g.Count(),
+                    UnitsPurchased: g.Sum(x => x.UnitsPurchased),
+                    PurchaseCost: g.Sum(x => x.TotalCost),
+                    UnitsReturned: retUnits,
+                    ExpiringOrExpiredUnits: expUnits,
+                    RemainingStock: g.Sum(x => x.RemainingStock));
             })
-            .OrderByDescending(c => c.TotalPurchaseCost)
             .ToList();
+
+        // Add any suppliers that only had returns in this period
+        foreach (var kvp in extraReturnsBySupplier)
+        {
+            if (!grouped.Any(g => g.SupplierName.Equals(kvp.Key, StringComparison.OrdinalIgnoreCase)))
+            {
+                if (!string.IsNullOrWhiteSpace(supplierFilter) &&
+                    !kvp.Key.Contains(supplierFilter.Trim(), StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                grouped.Add(new SupplierReportSummary(
+                    SupplierName: kvp.Key,
+                    BatchCount: 0,
+                    UnitsPurchased: 0,
+                    PurchaseCost: 0m,
+                    UnitsReturned: kvp.Value,
+                    ExpiringOrExpiredUnits: 0,
+                    RemainingStock: 0));
+            }
+        }
+
+        return grouped.OrderByDescending(s => s.PurchaseCost).ThenByDescending(s => s.UnitsReturned).ToList();
     }
 
-    public async Task<IReadOnlyList<BrandVendorPurchaseDetail>> GetBrandVendorPurchaseDetailsAsync(
+    public async Task<IReadOnlyList<SupplierBatchDetail>> GetSupplierBatchDetailsAsync(
         DateTime from,
         DateTime to,
-        string? filter = null,
+        string? supplierFilter = null,
         CancellationToken ct = default)
     {
         var utcStart = from.Date.ToUniversalTime();
         var utcEnd = to.Date.AddDays(1).ToUniversalTime();
+        var today = DateTime.Today;
+        var expiryCutoff = today.AddDays(30);
 
         var purchases = await _context.StockTransactions
             .Include(t => t.Medicine)
@@ -189,30 +184,44 @@ public class ReportService : IReportService
             .Where(b => batchIds.Contains(b.BatchId))
             .ToDictionaryAsync(b => b.BatchId, ct);
 
+        var returnsByBatch = await _context.StockTransactions
+            .Where(t => t.TransactionType == StockTransactionType.Returned &&
+                        t.BatchId.HasValue &&
+                        batchIds.Contains(t.BatchId.Value))
+            .GroupBy(t => t.BatchId!.Value)
+            .ToDictionaryAsync(g => g.Key, g => g.Sum(x => Math.Abs(x.Quantity)), ct);
+
         var list = purchases.Select(tx =>
         {
             batches.TryGetValue(tx.BatchId ?? 0, out var batch);
-            var brand = string.IsNullOrWhiteSpace(tx.Medicine?.Company) ? "Unspecified" : tx.Medicine!.Company!.Trim();
-            var vendor = string.IsNullOrWhiteSpace(batch?.Supplier) ? "Unspecified" : batch!.Supplier!.Trim();
+            var supplier = !string.IsNullOrWhiteSpace(batch?.Supplier)
+                ? batch!.Supplier!.Trim()
+                : (!string.IsNullOrWhiteSpace(tx.Medicine?.Company) ? tx.Medicine!.Company!.Trim() : "Unspecified");
             var unitCost = batch?.PurchasePrice > 0 ? batch.PurchasePrice : (tx.Medicine?.PurchasePrice ?? 0m);
-            return new BrandVendorPurchaseDetail(
+            var expiryDate = batch?.ExpiryDate ?? today.AddYears(1);
+            var expiryStatus = expiryDate.Date < today
+                ? "Expired"
+                : (expiryDate.Date <= expiryCutoff ? "Expiring (30d)" : "OK");
+            var returnedQty = batch is not null && returnsByBatch.TryGetValue(batch.BatchId, out var rq) ? rq : 0;
+
+            return new SupplierBatchDetail(
                 PurchaseDate: tx.TransactionDate.ToLocalTime(),
+                SupplierName: supplier,
                 MedicineName: tx.Medicine?.Name ?? "Unknown",
-                BrandName: brand,
-                VendorName: vendor,
                 BatchNumber: batch?.BatchNumber ?? "-",
+                ExpiryDate: expiryDate,
+                ExpiryStatus: expiryStatus,
                 UnitsPurchased: tx.Quantity,
-                UnitCost: unitCost,
-                TotalCost: tx.Quantity * unitCost,
-                RemainingStock: batch?.QuantityRemaining ?? 0);
+                UnitsReturned: returnedQty,
+                RemainingStock: batch?.QuantityRemaining ?? 0,
+                TotalCost: tx.Quantity * unitCost);
         });
 
-        if (!string.IsNullOrWhiteSpace(filter))
+        if (!string.IsNullOrWhiteSpace(supplierFilter))
         {
-            var term = filter.Trim();
+            var term = supplierFilter.Trim();
             list = list.Where(x =>
-                x.BrandName.Contains(term, StringComparison.OrdinalIgnoreCase) ||
-                x.VendorName.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                x.SupplierName.Contains(term, StringComparison.OrdinalIgnoreCase) ||
                 x.MedicineName.Contains(term, StringComparison.OrdinalIgnoreCase));
         }
 

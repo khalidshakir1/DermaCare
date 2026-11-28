@@ -66,7 +66,7 @@
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
-            <TabItem Header="Brand &amp; Vendor Reports">
+            <TabItem Header="Supplier Reports">
                 <Grid Margin="0,8,0,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -75,42 +75,46 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <WrapPanel Grid.Row="0" Margin="0,0,0,10">
-                        <RadioButton Content="By Brand (Company)" IsChecked="{Binding GroupByBrand}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,14,0" />
-                        <RadioButton Content="By Vendor (Supplier)" IsChecked="{Binding GroupByVendor}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,18,0" />
-                        <TextBox Width="240"
-                                 Text="{Binding CompanyFilter, UpdateSourceTrigger=PropertyChanged}"
-                                 materialDesign:HintAssist.Hint="Filter Brand, Vendor, or Medicine..."
+                        <TextBox Width="250"
+                                 Text="{Binding SupplierFilter, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Filter Supplier / Brand or Medicine..."
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                  Margin="0,0,8,0" />
                         <Button Content="Filter" Command="{Binding GenerateCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,16,0" />
-                        <TextBlock Text="{Binding TotalCompanyPurchaseCost, StringFormat='Total Purchased: Rs. {0:N0}'}"
+                        <TextBlock Text="{Binding TotalSupplierPurchaseCost, StringFormat='Total Purchased: Rs. {0:N0}'}"
                                    FontWeight="Bold"
                                    Foreground="#1565C0"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,16,0" />
+                        <TextBlock Text="{Binding TotalSupplierReturnedUnits, StringFormat='Total Returned: {0} units'}"
+                                   FontWeight="Bold"
+                                   Foreground="#EF6C00"
                                    VerticalAlignment="Center" />
                     </WrapPanel>
-                    <DataGrid Grid.Row="1" ItemsSource="{Binding CompanyPurchases}" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,0,0,10">
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding SupplierReports}" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,0,0,10">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Brand / Vendor" Binding="{Binding CompanyName}" Width="190" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="Supplier / Brand" Binding="{Binding SupplierName}" Width="200" FontWeight="SemiBold" />
                             <DataGridTextColumn Header="Batches" Binding="{Binding BatchCount}" Width="75" />
-                            <DataGridTextColumn Header="Purchased" Binding="{Binding TotalUnitsPurchased}" Width="95" />
-                            <DataGridTextColumn Header="Purchase Cost" Binding="{Binding TotalPurchaseCost, StringFormat='Rs. {0:N0}'}" Width="130" />
-                            <DataGridTextColumn Header="Units Sold" Binding="{Binding UnitsSold}" Width="90" />
-                            <DataGridTextColumn Header="Sales Revenue" Binding="{Binding SalesRevenue, StringFormat='Rs. {0:N0}'}" Width="130" />
-                            <DataGridTextColumn Header="Remaining Stock" Binding="{Binding CurrentUnitsRemaining}" Width="*" />
+                            <DataGridTextColumn Header="Purchased" Binding="{Binding UnitsPurchased}" Width="90" />
+                            <DataGridTextColumn Header="Purchase Cost" Binding="{Binding PurchaseCost, StringFormat='Rs. {0:N0}'}" Width="130" />
+                            <DataGridTextColumn Header="Returned" Binding="{Binding UnitsReturned}" Width="85" />
+                            <DataGridTextColumn Header="Expiring / Expired (30d)" Binding="{Binding ExpiringOrExpiredUnits}" Width="165" />
+                            <DataGridTextColumn Header="Remaining Stock" Binding="{Binding RemainingStock}" Width="*" />
                         </DataGrid.Columns>
                     </DataGrid>
-                    <TextBlock Grid.Row="2" Text="Purchase Batch Details" Style="{StaticResource MaterialDesignSubtitle2TextBlock}" Margin="0,0,0,6" />
-                    <DataGrid Grid.Row="3" ItemsSource="{Binding BrandVendorDetails}" AutoGenerateColumns="False" IsReadOnly="True">
+                    <TextBlock Grid.Row="2" Text="Supplier Batch Details (Purchasing, Returns &amp; Expiry)" Style="{StaticResource MaterialDesignSubtitle2TextBlock}" Margin="0,0,0,6" />
+                    <DataGrid Grid.Row="3" ItemsSource="{Binding SupplierBatchDetails}" AutoGenerateColumns="False" IsReadOnly="True">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Date" Binding="{Binding PurchaseDate, StringFormat='dd/MM/yyyy'}" Width="95" />
-                            <DataGridTextColumn Header="Medicine" Binding="{Binding MedicineName}" Width="170" />
-                            <DataGridTextColumn Header="Brand" Binding="{Binding BrandName}" Width="120" />
-                            <DataGridTextColumn Header="Vendor" Binding="{Binding VendorName}" Width="120" />
+                            <DataGridTextColumn Header="Purchase Date" Binding="{Binding PurchaseDate, StringFormat='dd/MM/yyyy'}" Width="105" />
+                            <DataGridTextColumn Header="Supplier / Brand" Binding="{Binding SupplierName}" Width="145" />
+                            <DataGridTextColumn Header="Medicine" Binding="{Binding MedicineName}" Width="165" />
                             <DataGridTextColumn Header="Batch #" Binding="{Binding BatchNumber}" Width="95" />
-                            <DataGridTextColumn Header="Purchased" Binding="{Binding UnitsPurchased}" Width="85" />
-                            <DataGridTextColumn Header="Unit Cost" Binding="{Binding UnitCost, StringFormat='Rs. {0:N0}'}" Width="90" />
-                            <DataGridTextColumn Header="Total Cost" Binding="{Binding TotalCost, StringFormat='Rs. {0:N0}'}" Width="100" />
-                            <DataGridTextColumn Header="Remaining" Binding="{Binding RemainingStock}" Width="*" />
+                            <DataGridTextColumn Header="Expiry Date" Binding="{Binding ExpiryDate, StringFormat='dd/MM/yyyy'}" Width="95" />
+                            <DataGridTextColumn Header="Expiry Status" Binding="{Binding ExpiryStatus}" Width="110" />
+                            <DataGridTextColumn Header="Purchased" Binding="{Binding UnitsPurchased}" Width="80" />
+                            <DataGridTextColumn Header="Returned" Binding="{Binding UnitsReturned}" Width="75" />
+                            <DataGridTextColumn Header="Remaining" Binding="{Binding RemainingStock}" Width="80" />
+                            <DataGridTextColumn Header="Total Cost" Binding="{Binding TotalCost, StringFormat='Rs. {0:N0}'}" Width="*" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>

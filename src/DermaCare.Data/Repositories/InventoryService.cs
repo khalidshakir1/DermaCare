@@ -134,6 +134,7 @@ public class InventoryService : IInventoryService
         medicine.CurrentStock += signedQty;
 
         // Deduct from earliest-expiring active batches (FEFO)
+        int? affectedBatchId = null;
         if (signedQty < 0)
         {
             var remainingToDeduct = quantity;
@@ -145,6 +146,7 @@ public class InventoryService : IInventoryService
             foreach (var batch in batches)
             {
                 if (remainingToDeduct <= 0) break;
+                affectedBatchId ??= batch.BatchId;
                 var take = Math.Min(batch.QuantityRemaining, remainingToDeduct);
                 batch.QuantityRemaining -= take;
                 remainingToDeduct -= take;
@@ -154,6 +156,7 @@ public class InventoryService : IInventoryService
         _context.StockTransactions.Add(new StockTransaction
         {
             MedicineId = medicineId,
+            BatchId = affectedBatchId,
             TransactionType = type,
             Quantity = signedQty,
             TransactionDate = DateTime.UtcNow,
