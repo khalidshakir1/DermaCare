@@ -19,6 +19,7 @@ public class ReportsViewModel : BaseViewModel
     private DateTime _fromDate = DateTime.Today.AddDays(-6);
     private DateTime _toDate = DateTime.Today;
     private string? _companyFilter;
+    private bool _groupByVendor;
     private ClinicReportSummary? _summary;
     private string? _statusMessage;
 
@@ -37,6 +38,7 @@ public class ReportsViewModel : BaseViewModel
         Invoices = new ObservableCollection<Invoice>();
         RevenueByMethod = new ObservableCollection<PaymentMethodSummary>();
         CompanyPurchases = new ObservableCollection<CompanyPurchaseSummary>();
+        BrandVendorDetails = new ObservableCollection<BrandVendorPurchaseDetail>();
 
         DailyClosingCommand = new RelayCommand(async () =>
         {
@@ -68,10 +70,31 @@ public class ReportsViewModel : BaseViewModel
     public ObservableCollection<Invoice> Invoices { get; }
     public ObservableCollection<PaymentMethodSummary> RevenueByMethod { get; }
     public ObservableCollection<CompanyPurchaseSummary> CompanyPurchases { get; }
+    public ObservableCollection<BrandVendorPurchaseDetail> BrandVendorDetails { get; }
 
     public DateTime FromDate { get => _fromDate; set => SetProperty(ref _fromDate, value); }
     public DateTime ToDate { get => _toDate; set => SetProperty(ref _toDate, value); }
     public string? CompanyFilter { get => _companyFilter; set => SetProperty(ref _companyFilter, value); }
+    public bool GroupByVendor
+    {
+        get => _groupByVendor;
+        set
+        {
+            if (SetProperty(ref _groupByVendor, value))
+            {
+                OnPropertyChanged(nameof(GroupByBrand));
+                _ = LoadReportAsync();
+            }
+        }
+    }
+    public bool GroupByBrand
+    {
+        get => !_groupByVendor;
+        set
+        {
+            if (value) GroupByVendor = false;
+        }
+    }
     public decimal TotalCompanyPurchaseCost => CompanyPurchases.Sum(c => c.TotalPurchaseCost);
 
     public int TotalAppointments => _summary?.TotalAppointments ?? 0;
@@ -109,9 +132,13 @@ public class ReportsViewModel : BaseViewModel
             RevenueByMethod.Clear();
             foreach (var m in _summary.RevenueByMethod) RevenueByMethod.Add(m);
 
-            var companyRows = await _reportService.GetCompanyPurchasesAsync(FromDate, ToDate, CompanyFilter);
+            var companyRows = await _reportService.GetCompanyPurchasesAsync(FromDate, ToDate, CompanyFilter, GroupByVendor);
             CompanyPurchases.Clear();
             foreach (var c in companyRows) CompanyPurchases.Add(c);
+
+            var detailRows = await _reportService.GetBrandVendorPurchaseDetailsAsync(FromDate, ToDate, CompanyFilter);
+            BrandVendorDetails.Clear();
+            foreach (var d in detailRows) BrandVendorDetails.Add(d);
 
             OnPropertyChanged(nameof(TotalAppointments));
             OnPropertyChanged(nameof(CompletedAppointments));

@@ -89,6 +89,7 @@ public class ReportService : IReportService
         DateTime from,
         DateTime to,
         string? companyFilter = null,
+        bool groupByVendor = false,
         CancellationToken ct = default)
     {
         var utcStart = from.Date.ToUniversalTime();
@@ -106,16 +107,34 @@ public class ReportService : IReportService
             .Where(b => batchIds.Contains(b.BatchId))
             .ToDictionaryAsync(b => b.BatchId, ct);
 
+        // Also compute medicine sales in the date range for brand-wise sales reporting
+        var soldItems = await _context.InvoiceItems
+            .Include(i => i.Invoice)
+            .Include(i => i.Medicine)
+            .Where(i => i.MedicineId.HasValue &&
+                        i.Invoice != null &&
+                        i.Invoice.IssuedAt >= utcStart &&
+                        i.Invoice.IssuedAt < utcEnd &&
+                        i.Invoice.Status != InvoiceStatus.Void)
+            .ToListAsync(ct);
+
+        var salesByBrand = soldItems
+            .GroupBy(i => string.IsNullOrWhiteSpace(i.Medicine?.Company) ? "Unspecified" : i.Medicine!.Company!.Trim(), StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(
+                g => g.Key,
+                g => (Units: g.Sum(x => x.Quantity), Revenue: g.Sum(x => x.Quantity * x.UnitPrice - x.DiscountAmount)),
+                StringComparer.OrdinalIgnoreCase);
+
         var rows = purchases.Select(tx =>
         {
             batches.TryGetValue(tx.BatchId ?? 0, out var batch);
-            var company = !string.IsNullOrWhiteSpace(batch?.Supplier)
-                ? batch!.Supplier!.Trim()
-                : (!string.IsNullOrWhiteSpace(tx.Medicine?.Company) ? tx.Medicine!.Company!.Trim() : "Unspecified");
+            var brand = string.IsNullOrWhiteSpace(tx.Medicine?.Company) ? "Unspecified" : tx.Medicine!.Company!.Trim();
+            var vendor = string.IsNullOrWhiteSpace(batch?.Supplier) ? "Unspecified" : batch!.Supplier!.Trim();
+            var key = groupByVendor ? vendor : brand;
             var unitCost = batch?.PurchasePrice > 0 ? batch.PurchasePrice : (tx.Medicine?.PurchasePrice ?? 0m);
             return new
             {
-                Company = company,
+                Key = key,
                 BatchId = batch?.BatchId ?? tx.TransactionId,
                 Units = tx.Quantity,
                 Cost = tx.Quantity * unitCost,
@@ -126,18 +145,77 @@ public class ReportService : IReportService
         if (!string.IsNullOrWhiteSpace(companyFilter))
         {
             var term = companyFilter.Trim();
-            rows = rows.Where(r => r.Company.Contains(term, StringComparison.OrdinalIgnoreCase));
+            rows = rows.Where(r => r.Key.Contains(term, StringComparison.OrdinalIgnoreCase));
         }
 
         return rows
-            .GroupBy(r => r.Company, StringComparer.OrdinalIgnoreCase)
-            .Select(g => new CompanyPurchaseSummary(
-                CompanyName: g.First().Company,
-                BatchCount: g.Select(x => x.BatchId).Distinct().Count(),
-                TotalUnitsPurchased: g.Sum(x => x.Units),
-                TotalPurchaseCost: g.Sum(x => x.Cost),
-                CurrentUnitsRemaining: g.Sum(x => x.Remaining)))
+            .GroupBy(r => r.Key, StringComparer.OrdinalIgnoreCase)
+            .Select(g =>
+            {
+                var name = g.First().Key;
+                var sales = !groupByVendor && salesByBrand.TryGetValue(name, out var s) ? s : (Units: 0, Revenue: 0m);
+                return new CompanyPurchaseSummary(
+                    CompanyName: name,
+                    BatchCount: g.Select(x => x.BatchId).Distinct().Count(),
+                    TotalUnitsPurchased: g.Sum(x => x.Units),
+                    TotalPurchaseCost: g.Sum(x => x.Cost),
+                    CurrentUnitsRemaining: g.Sum(x => x.Remaining),
+                    UnitsSold: sales.Units,
+                    SalesRevenue: sales.Revenue);
+            })
             .OrderByDescending(c => c.TotalPurchaseCost)
             .ToList();
+    }
+
+    public async Task<IReadOnlyList<BrandVendorPurchaseDetail>> GetBrandVendorPurchaseDetailsAsync(
+        DateTime from,
+        DateTime to,
+        string? filter = null,
+        CancellationToken ct = default)
+    {
+        var utcStart = from.Date.ToUniversalTime();
+        var utcEnd = to.Date.AddDays(1).ToUniversalTime();
+
+        var purchases = await _context.StockTransactions
+            .Include(t => t.Medicine)
+            .Where(t => t.TransactionType == StockTransactionType.Purchase &&
+                        t.TransactionDate >= utcStart &&
+                        t.TransactionDate < utcEnd)
+            .OrderByDescending(t => t.TransactionDate)
+            .ToListAsync(ct);
+
+        var batchIds = purchases.Where(p => p.BatchId.HasValue).Select(p => p.BatchId!.Value).Distinct().ToList();
+        var batches = await _context.MedicineBatches
+            .Where(b => batchIds.Contains(b.BatchId))
+            .ToDictionaryAsync(b => b.BatchId, ct);
+
+        var list = purchases.Select(tx =>
+        {
+            batches.TryGetValue(tx.BatchId ?? 0, out var batch);
+            var brand = string.IsNullOrWhiteSpace(tx.Medicine?.Company) ? "Unspecified" : tx.Medicine!.Company!.Trim();
+            var vendor = string.IsNullOrWhiteSpace(batch?.Supplier) ? "Unspecified" : batch!.Supplier!.Trim();
+            var unitCost = batch?.PurchasePrice > 0 ? batch.PurchasePrice : (tx.Medicine?.PurchasePrice ?? 0m);
+            return new BrandVendorPurchaseDetail(
+                PurchaseDate: tx.TransactionDate.ToLocalTime(),
+                MedicineName: tx.Medicine?.Name ?? "Unknown",
+                BrandName: brand,
+                VendorName: vendor,
+                BatchNumber: batch?.BatchNumber ?? "-",
+                UnitsPurchased: tx.Quantity,
+                UnitCost: unitCost,
+                TotalCost: tx.Quantity * unitCost,
+                RemainingStock: batch?.QuantityRemaining ?? 0);
+        });
+
+        if (!string.IsNullOrWhiteSpace(filter))
+        {
+            var term = filter.Trim();
+            list = list.Where(x =>
+                x.BrandName.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                x.VendorName.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                x.MedicineName.Contains(term, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return list.ToList();
     }
 }
