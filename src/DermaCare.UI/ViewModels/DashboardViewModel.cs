@@ -21,6 +21,7 @@ public class DashboardViewModel : BaseViewModel
     private readonly IBillingService _billingService;
     private readonly IReportService _reportService;
     private readonly INavigationService _navigationService;
+    private readonly SemaphoreSlim _loadLock = new(1, 1);
 
     private int _todaysAppointmentCount;
     private int _lowStockCount;
@@ -168,46 +169,54 @@ public class DashboardViewModel : BaseViewModel
 
     private async Task LoadSummaryAsync()
     {
-        var today = await _appointmentRepository.GetByDateAsync(DateTime.Today);
-
-        TodaysQueue.Clear();
-        foreach (var a in today.Where(a => !string.IsNullOrWhiteSpace(a.TokenNumber) && a.Status != AppointmentStatus.Cancelled))
-            TodaysQueue.Add(a);
-
-        TodaysAppointmentCount = TodaysQueue.Count;
-        PendingQueueCount = TodaysQueue.Count(a => a.Status is AppointmentStatus.Scheduled or AppointmentStatus.Confirmed or AppointmentStatus.InProgress);
-
-        _currentToken = TodaysQueue.FirstOrDefault(a => a.Status == AppointmentStatus.InProgress);
-        _nextWaitingToken = TodaysQueue.FirstOrDefault(a => a.Status is AppointmentStatus.Scheduled or AppointmentStatus.Confirmed);
-        OnPropertyChanged(nameof(CurrentTokenNumber));
-        OnPropertyChanged(nameof(CurrentTokenPatient));
-        OnPropertyChanged(nameof(NextWaitingText));
-
-        var lowStock = await _inventoryService.GetLowStockMedicinesAsync();
-        LowStockCount = lowStock.Count;
-
-        var expiring = await _inventoryService.GetExpiringBatchesAsync(60);
-        ExpiringSoonCount = expiring.Count;
-
-        TodaysRevenue = await _billingService.GetTodaysRevenueAsync();
-        TodaysDiscounts = await _billingService.GetTodaysDiscountsAsync();
-
-        var userId = _session.CurrentUser?.UserId ?? 0;
-        if (userId > 0)
+        if (!await _loadLock.WaitAsync(0)) return;
+        try
         {
-            MyTodaysRevenue = await _billingService.GetTodaysRevenueByUserAsync(userId);
-            MyTodaysBillCount = await _billingService.GetTodaysBillCountAsync(userId);
-        }
+            var today = await _appointmentRepository.GetByDateAsync(DateTime.Today);
 
-        if (_session.IsAdmin)
-        {
-            var report = await _reportService.GenerateSummaryAsync(DateTime.Today, DateTime.Today);
-            ReceptionistSummaries.Clear();
-            if (report.RevenueByReceptionist is not null)
+            TodaysQueue.Clear();
+            foreach (var a in today.Where(a => !string.IsNullOrWhiteSpace(a.TokenNumber) && a.Status != AppointmentStatus.Cancelled))
+                TodaysQueue.Add(a);
+
+            TodaysAppointmentCount = TodaysQueue.Count;
+            PendingQueueCount = TodaysQueue.Count(a => a.Status is AppointmentStatus.Scheduled or AppointmentStatus.Confirmed or AppointmentStatus.InProgress);
+
+            _currentToken = TodaysQueue.FirstOrDefault(a => a.Status == AppointmentStatus.InProgress);
+            _nextWaitingToken = TodaysQueue.FirstOrDefault(a => a.Status is AppointmentStatus.Scheduled or AppointmentStatus.Confirmed);
+            OnPropertyChanged(nameof(CurrentTokenNumber));
+            OnPropertyChanged(nameof(CurrentTokenPatient));
+            OnPropertyChanged(nameof(NextWaitingText));
+
+            var lowStock = await _inventoryService.GetLowStockMedicinesAsync();
+            LowStockCount = lowStock.Count;
+
+            var expiring = await _inventoryService.GetExpiringBatchesAsync(60);
+            ExpiringSoonCount = expiring.Count;
+
+            TodaysRevenue = await _billingService.GetTodaysRevenueAsync();
+            TodaysDiscounts = await _billingService.GetTodaysDiscountsAsync();
+
+            var userId = _session.CurrentUser?.UserId ?? 0;
+            if (userId > 0)
             {
-                foreach (var r in report.RevenueByReceptionist)
-                    ReceptionistSummaries.Add(r);
+                MyTodaysRevenue = await _billingService.GetTodaysRevenueByUserAsync(userId);
+                MyTodaysBillCount = await _billingService.GetTodaysBillCountAsync(userId);
             }
+
+            if (_session.IsAdmin)
+            {
+                var report = await _reportService.GenerateSummaryAsync(DateTime.Today, DateTime.Today);
+                ReceptionistSummaries.Clear();
+                if (report.RevenueByReceptionist is not null)
+                {
+                    foreach (var r in report.RevenueByReceptionist)
+                        ReceptionistSummaries.Add(r);
+                }
+            }
+        }
+        finally
+        {
+            _loadLock.Release();
         }
     }
 }

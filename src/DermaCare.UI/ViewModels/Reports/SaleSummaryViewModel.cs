@@ -14,6 +14,7 @@ public class SaleSummaryViewModel : BaseViewModel
     private readonly IBillingService _billingService;
     private readonly PdfReportExporter _pdfExporter;
     private readonly ExcelReportExporter _excelExporter;
+    private readonly SemaphoreSlim _loadLock = new(1, 1);
 
     private DateTime _fromDate = DateTime.Today;
     private DateTime _toDate = DateTime.Today;
@@ -97,31 +98,39 @@ public class SaleSummaryViewModel : BaseViewModel
 
     private async Task LoadSummaryAsync()
     {
-        _summary = await _reportService.GenerateSummaryAsync(FromDate, ToDate);
-
-        RevenueByMethod.Clear();
-        foreach (var m in _summary.RevenueByMethod)
-            RevenueByMethod.Add(m);
-
-        RevenueByReceptionist.Clear();
-        if (_summary.RevenueByReceptionist is not null)
+        if (!await _loadLock.WaitAsync(0)) return;
+        try
         {
-            foreach (var r in _summary.RevenueByReceptionist)
-                RevenueByReceptionist.Add(r);
+            _summary = await _reportService.GenerateSummaryAsync(FromDate, ToDate);
+
+            RevenueByMethod.Clear();
+            foreach (var m in _summary.RevenueByMethod)
+                RevenueByMethod.Add(m);
+
+            RevenueByReceptionist.Clear();
+            if (_summary.RevenueByReceptionist is not null)
+            {
+                foreach (var r in _summary.RevenueByReceptionist)
+                    RevenueByReceptionist.Add(r);
+            }
+
+            Invoices.Clear();
+            foreach (var inv in _summary.Invoices)
+                Invoices.Add(inv);
+
+            OnPropertyChanged(nameof(TotalBilled));
+            OnPropertyChanged(nameof(TotalCollected));
+            OnPropertyChanged(nameof(TotalDiscount));
+            OnPropertyChanged(nameof(TotalBills));
+            OnPropertyChanged(nameof(TotalAppointments));
+            OnPropertyChanged(nameof(CompletedAppointments));
+
+            StatusMessage = $"Sale summary for {FromDate:dd/MM/yyyy} – {ToDate:dd/MM/yyyy}";
         }
-
-        Invoices.Clear();
-        foreach (var inv in _summary.Invoices)
-            Invoices.Add(inv);
-
-        OnPropertyChanged(nameof(TotalBilled));
-        OnPropertyChanged(nameof(TotalCollected));
-        OnPropertyChanged(nameof(TotalDiscount));
-        OnPropertyChanged(nameof(TotalBills));
-        OnPropertyChanged(nameof(TotalAppointments));
-        OnPropertyChanged(nameof(CompletedAppointments));
-
-        StatusMessage = $"Sale summary for {FromDate:dd/MM/yyyy} – {ToDate:dd/MM/yyyy}";
+        finally
+        {
+            _loadLock.Release();
+        }
     }
 
     private async Task ExportPdfAsync()

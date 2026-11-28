@@ -14,6 +14,7 @@ public class InvoiceViewModel : BaseViewModel
     private readonly IBillingService _billingService;
     private readonly IInventoryService _inventoryService;
     private readonly PdfReportExporter _pdfExporter;
+    private readonly SemaphoreSlim _loadLock = new(1, 1);
 
     private List<Invoice> _allRecentInvoices = new();
     private string? _customerName;
@@ -223,17 +224,25 @@ public class InvoiceViewModel : BaseViewModel
 
     private async Task InitializeAsync()
     {
-        var services = await _billingService.GetActiveServicesAsync();
-        Services.Clear();
-        foreach (var s in services) Services.Add(s);
-        SelectedService = Services.FirstOrDefault();
+        if (!await _loadLock.WaitAsync(0)) return;
+        try
+        {
+            var services = await _billingService.GetActiveServicesAsync();
+            Services.Clear();
+            foreach (var s in services) Services.Add(s);
+            SelectedService = Services.FirstOrDefault();
 
-        var medicines = await _inventoryService.GetMedicinesAsync();
-        Medicines.Clear();
-        foreach (var m in medicines) Medicines.Add(m);
-        SelectedMedicine = Medicines.FirstOrDefault();
+            var medicines = await _inventoryService.GetMedicinesAsync();
+            Medicines.Clear();
+            foreach (var m in medicines) Medicines.Add(m);
+            SelectedMedicine = Medicines.FirstOrDefault();
 
-        await LoadRecentInvoicesAsync();
+            await LoadRecentInvoicesAsync();
+        }
+        finally
+        {
+            _loadLock.Release();
+        }
     }
 
     private async Task LoadRecentInvoicesAsync()

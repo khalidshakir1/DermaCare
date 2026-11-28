@@ -15,6 +15,7 @@ public class AppointmentCalendarViewModel : BaseViewModel
     private readonly IDoctorService _doctorService;
     private readonly IBillingService _billingService;
     private readonly INavigationService _navigationService;
+    private readonly SemaphoreSlim _loadLock = new(1, 1);
 
     private DateTime _selectedDate = DateTime.Today;
     private Appointment? _selectedAppointment;
@@ -116,10 +117,18 @@ public class AppointmentCalendarViewModel : BaseViewModel
 
     public async Task LoadAppointmentsAsync()
     {
-        var items = await _appointmentService.GetByDateAsync(SelectedDate);
-        Appointments.Clear();
-        foreach (var a in items)
-            Appointments.Add(a);
+        if (!await _loadLock.WaitAsync(0)) return;
+        try
+        {
+            var items = await _appointmentService.GetByDateAsync(SelectedDate);
+            Appointments.Clear();
+            foreach (var a in items)
+                Appointments.Add(a);
+        }
+        finally
+        {
+            _loadLock.Release();
+        }
     }
 
     private async Task IssueQuickWalkInTokenAsync()

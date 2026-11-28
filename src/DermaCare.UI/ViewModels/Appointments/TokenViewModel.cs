@@ -12,6 +12,7 @@ public class TokenViewModel : BaseViewModel
     private readonly IAppointmentService _appointmentService;
     private readonly IDoctorService _doctorService;
     private readonly IBillingService _billingService;
+    private readonly SemaphoreSlim _loadLock = new(1, 1);
 
     private bool _isWalkInMode = true;
     private Appointment? _selectedBookedAppointment;
@@ -102,28 +103,49 @@ public class TokenViewModel : BaseViewModel
 
     private async Task LoadAsync()
     {
-        var today = await _appointmentService.GetByDateAsync(DateTime.Today);
-
-        PendingAppointments.Clear();
-        foreach (var a in today.Where(a =>
-                     string.IsNullOrWhiteSpace(a.TokenNumber) &&
-                     a.Status != AppointmentStatus.Cancelled &&
-                     a.Type != AppointmentType.WalkIn))
+        if (!await _loadLock.WaitAsync(0)) return;
+        try
         {
-            PendingAppointments.Add(a);
-        }
-        SelectedBookedAppointment = PendingAppointments.FirstOrDefault();
+            var today = await _appointmentService.GetByDateAsync(DateTime.Today);
 
-        TodaysTokens.Clear();
-        foreach (var a in today.Where(a => !string.IsNullOrWhiteSpace(a.TokenNumber)))
+            PendingAppointments.Clear();
+            foreach (var a in today.Where(a =>
+                         string.IsNullOrWhiteSpace(a.TokenNumber) &&
+                         a.Status != AppointmentStatus.Cancelled &&
+                         a.Type != AppointmentType.WalkIn))
+            {
+                PendingAppointments.Add(a);
+            }
+            SelectedBookedAppointment = PendingAppointments.FirstOrDefault();
+
+            TodaysTokens.Clear();
+            foreach (var a in today.Where(a => !string.IsNullOrWhiteSpace(a.TokenNumber)))
+            {
+                TodaysTokens.Add(a);
+            }
+
+            await LoadHistoryInternalAsync();
+        }
+        finally
         {
-            TodaysTokens.Add(a);
+            _loadLock.Release();
         }
-
-        await LoadHistoryAsync();
     }
 
     private async Task LoadHistoryAsync()
+    {
+        if (!await _loadLock.WaitAsync(0)) return;
+        try
+        {
+            await LoadHistoryInternalAsync();
+        }
+        finally
+        {
+            _loadLock.Release();
+        }
+    }
+
+    private async Task LoadHistoryInternalAsync()
     {
         var history = await _appointmentService.GetTokenHistoryAsync(HistoryFromDate, HistoryToDate);
         TokenHistory.Clear();

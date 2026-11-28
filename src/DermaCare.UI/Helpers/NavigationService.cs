@@ -13,6 +13,7 @@ public interface INavigationService
 public class NavigationService : INavigationService
 {
     private readonly IServiceProvider _serviceProvider;
+    private IServiceScope? _currentScope;
     private BaseViewModel? _currentView;
 
     public NavigationService(IServiceProvider serviceProvider) => _serviceProvider = serviceProvider;
@@ -31,8 +32,14 @@ public class NavigationService : INavigationService
 
     public void NavigateTo<TViewModel>(Action<TViewModel>? initialize = null) where TViewModel : BaseViewModel
     {
-        var vm = _serviceProvider.GetRequiredService<TViewModel>();
+        var oldScope = _currentScope;
+        var newScope = _serviceProvider.CreateScope();
+        _currentScope = newScope;
+
+        var vm = newScope.ServiceProvider.GetRequiredService<TViewModel>();
         initialize?.Invoke(vm);
         CurrentView = vm;
+
+        oldScope?.Dispose();
     }
 }

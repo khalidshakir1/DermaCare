@@ -53,6 +53,23 @@ public partial class App : Application
             .WriteTo.File(logPath, rollingInterval: RollingInterval.Day)
             .CreateLogger();
 
+        DispatcherUnhandledException += (_, args) =>
+        {
+            Log.Error(args.Exception, "Unhandled UI dispatcher exception.");
+            args.Handled = true;
+            MessageBox.Show(
+                $"An unexpected error occurred: {args.Exception.Message}",
+                "DermaCare",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        };
+
+        TaskScheduler.UnobservedTaskException += (_, args) =>
+        {
+            Log.Error(args.Exception, "Unobserved task exception.");
+            args.SetObserved();
+        };
+
         var configuration = new ConfigurationBuilder()
             .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)

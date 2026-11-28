@@ -14,6 +14,7 @@ public class ReportsViewModel : BaseViewModel
     private readonly IBillingService _billingService;
     private readonly ExcelReportExporter _excelExporter;
     private readonly PdfReportExporter _pdfExporter;
+    private readonly SemaphoreSlim _loadLock = new(1, 1);
 
     private DateTime _fromDate = DateTime.Today.AddDays(-6);
     private DateTime _toDate = DateTime.Today;
@@ -94,28 +95,36 @@ public class ReportsViewModel : BaseViewModel
 
     private async Task LoadReportAsync()
     {
-        _summary = await _reportService.GenerateSummaryAsync(FromDate, ToDate);
+        if (!await _loadLock.WaitAsync(0)) return;
+        try
+        {
+            _summary = await _reportService.GenerateSummaryAsync(FromDate, ToDate);
 
-        Appointments.Clear();
-        foreach (var a in _summary.Appointments) Appointments.Add(a);
+            Appointments.Clear();
+            foreach (var a in _summary.Appointments) Appointments.Add(a);
 
-        Invoices.Clear();
-        foreach (var i in _summary.Invoices) Invoices.Add(i);
+            Invoices.Clear();
+            foreach (var i in _summary.Invoices) Invoices.Add(i);
 
-        RevenueByMethod.Clear();
-        foreach (var m in _summary.RevenueByMethod) RevenueByMethod.Add(m);
+            RevenueByMethod.Clear();
+            foreach (var m in _summary.RevenueByMethod) RevenueByMethod.Add(m);
 
-        var companyRows = await _reportService.GetCompanyPurchasesAsync(FromDate, ToDate, CompanyFilter);
-        CompanyPurchases.Clear();
-        foreach (var c in companyRows) CompanyPurchases.Add(c);
+            var companyRows = await _reportService.GetCompanyPurchasesAsync(FromDate, ToDate, CompanyFilter);
+            CompanyPurchases.Clear();
+            foreach (var c in companyRows) CompanyPurchases.Add(c);
 
-        OnPropertyChanged(nameof(TotalAppointments));
-        OnPropertyChanged(nameof(CompletedAppointments));
-        OnPropertyChanged(nameof(NewPatients));
-        OnPropertyChanged(nameof(TotalBilled));
-        OnPropertyChanged(nameof(TotalCollected));
-        OnPropertyChanged(nameof(TotalCompanyPurchaseCost));
-        StatusMessage = $"Showing report for {FromDate:dd/MM/yyyy} – {ToDate:dd/MM/yyyy}.";
+            OnPropertyChanged(nameof(TotalAppointments));
+            OnPropertyChanged(nameof(CompletedAppointments));
+            OnPropertyChanged(nameof(NewPatients));
+            OnPropertyChanged(nameof(TotalBilled));
+            OnPropertyChanged(nameof(TotalCollected));
+            OnPropertyChanged(nameof(TotalCompanyPurchaseCost));
+            StatusMessage = $"Showing report for {FromDate:dd/MM/yyyy} – {ToDate:dd/MM/yyyy}.";
+        }
+        finally
+        {
+            _loadLock.Release();
+        }
     }
 
     private void ExportExcel()

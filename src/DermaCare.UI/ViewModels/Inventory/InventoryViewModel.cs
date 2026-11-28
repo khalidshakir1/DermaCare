@@ -10,6 +10,7 @@ public class InventoryViewModel : BaseViewModel
 {
     private readonly IInventoryService _inventoryService;
     private readonly ICurrentSession _session;
+    private readonly SemaphoreSlim _loadLock = new(1, 1);
 
     private string _searchQuery = string.Empty;
     private Medicine? _selectedMedicine;
@@ -123,19 +124,40 @@ public class InventoryViewModel : BaseViewModel
 
     private async Task LoadAllAsync()
     {
-        await LoadMedicinesAsync();
+        if (!await _loadLock.WaitAsync(0)) return;
+        try
+        {
+            await LoadMedicinesInternalAsync();
 
-        ExpiringBatches.Clear();
-        foreach (var b in await _inventoryService.GetExpiringBatchesAsync(60))
-            ExpiringBatches.Add(b);
-        ExpiringCount = ExpiringBatches.Count;
+            ExpiringBatches.Clear();
+            foreach (var b in await _inventoryService.GetExpiringBatchesAsync(60))
+                ExpiringBatches.Add(b);
+            ExpiringCount = ExpiringBatches.Count;
 
-        Transactions.Clear();
-        foreach (var t in await _inventoryService.GetTransactionsAsync())
-            Transactions.Add(t);
+            Transactions.Clear();
+            foreach (var t in await _inventoryService.GetTransactionsAsync())
+                Transactions.Add(t);
+        }
+        finally
+        {
+            _loadLock.Release();
+        }
     }
 
     private async Task LoadMedicinesAsync()
+    {
+        if (!await _loadLock.WaitAsync(0)) return;
+        try
+        {
+            await LoadMedicinesInternalAsync();
+        }
+        finally
+        {
+            _loadLock.Release();
+        }
+    }
+
+    private async Task LoadMedicinesInternalAsync()
     {
         var list = await _inventoryService.GetMedicinesAsync(SearchQuery);
         Medicines.Clear();
